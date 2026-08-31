@@ -3,14 +3,14 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.0+](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Paper](https://img.shields.io/badge/Paper-Under_Review-orange.svg)](#-citation)
+[![Paper](https://img.shields.io/badge/Paper-Under_Review-orange.svg)](#citation)
 
 Official PyTorch implementation and benchmark suite for the research paper:  
 **"Formulation-Induced Failure Modes in Physics-Informed Neural Networks for High-Reynolds-Number Incompressible Flows: Operator Conditioning and False Convergence"**.
 
 ---
 
-## 📌 Abstract
+## Abstract
 
 Physics-informed neural networks (PINNs) have emerged as a prominent mesh-free paradigm for solving partial differential equations (PDEs). However, solving convective, high-Reynolds-number (Re >= 1000) Navier-Stokes equations remains notoriously stiff. 
 
@@ -18,14 +18,14 @@ This repository presents a controlled, formulation-level investigation of 2D ste
 1. **Streamfunction-Pressure ($\psi-p$) Formulation**
 2. **Streamfunction-Vorticity ($\psi-\omega$) Formulation**
 
-### 🔍 Key Scientific Findings
+### Key Scientific Findings
 * **Continuous Equivalence != Optimization Equivalence:** While $\psi-p$ and $\psi-\omega$ are mathematically identical in continuous fluid mechanics, their neural loss landscapes diverge sharply.
 * **The False Convergence Paradox in $\psi-\omega$:** $\psi-\omega$ PINNs achieve low residual loss $\mathcal{L}_{\mathrm{pde}} \to 0$ and match 1D centerline velocities because velocity is supervised by data ($u=\psi_y, v=-\psi_x$). However, because mesh-free PINNs lack discrete grid spacing $h$ to evaluate **Thom's wall-vorticity formula** ($\omega_w = -2\psi_1/h^2 - 2U/h$), the optimizer drives $\omega \to 0$ in the interior (**>99.99% loss of global enstrophy**), annihilating secondary corner vortices.
 * **Continuous Hodge Projection in $\psi-p$:** Retaining Pressure ($p$) acts as an elliptic Lagrange multiplier (Helmholtz-Hodge projection) that stabilizes convective momentum transport, accurately capturing primary and secondary vortex cores and near-wall shear without auxiliary boundary approximations.
 
 ---
 
-## 📊 Benchmark Results (Re = 1000)
+## Benchmark Results (Re = 1000)
 
 ### 1. Primary & Secondary Vortex Centers
 | Method / Formulation | Primary Vortex $(x_c, y_c)$ | $\psi_{\min}$ | Secondary BR $(x_{\mathrm{BR}}, y_{\mathrm{BR}})$ | $\psi_{\max} \times 10^3$ |
@@ -45,14 +45,14 @@ This repository presents a controlled, formulation-level investigation of 2D ste
 
 ---
 
-## 🖼️ Flow Visualizations
+## Flow Visualizations
 
 ![2D Flow Topologies Comparison](figures/fig3_flow_topologies_comparison.png)
 *Figure 3: 3x4 comparative flow field grid comparing Streamlines ($\psi$), Vorticity ($\omega$), Velocity Magnitude ($|V|$), and Pressure ($p$) across Reference FDM, $\psi-p$ PINN, and $\psi-\omega$ PINN.*
 
 ---
 
-## 📁 Repository Architecture
+## Repository Architecture
 
 ```text
 pinn-fluid-formulations/
@@ -102,7 +102,7 @@ pinn-fluid-formulations/
 
 ---
 
-## ⚡ Quickstart & Reproduction Guide
+## Quickstart & Reproduction Guide
 
 ### 1. Installation & Environment Setup
 ```bash
@@ -129,7 +129,7 @@ python -c "from src.train_pinn import train; train(formulation='psi_p', Re=1000,
 
 ---
 
-## 📖 Citation
+## Citation
 
 If you find this codebase or research useful, please cite our paper:
 
@@ -145,5 +145,5 @@ If you find this codebase or research useful, please cite our paper:
 
 ---
 
-## 📜 License
+## License
 This project is open-source under the [MIT License](LICENSE).
