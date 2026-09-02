@@ -20,7 +20,7 @@ This repository presents a controlled, formulation-level investigation of 2D ste
 
 ### Key Scientific Findings
 * **Continuous Equivalence != Optimization Equivalence:** While $\psi-p$ and $\psi-\omega$ are mathematically identical in continuous fluid mechanics, their neural loss landscapes diverge sharply.
-* **The False Convergence Paradox in $\psi-\omega$:** $\psi-\omega$ PINNs achieve low residual loss $\mathcal{L}_{\mathrm{pde}} \to 0$ and match 1D centerline velocities because velocity is supervised by data ($u=\psi_y, v=-\psi_x$). However, because mesh-free PINNs lack discrete grid spacing $h$ to evaluate **Thom's wall-vorticity formula** ($\omega_w = -2\psi_1/h^2 - 2U/h$), the optimizer drives $\omega \to 0$ in the interior (**>99.99% loss of global enstrophy**), annihilating secondary corner vortices.
+* **The False Convergence & Operator Diffusion in $\psi-\omega$:** $\psi-\omega$ PINNs achieve low residual loss $\mathcal{L}_{\mathrm{pde}} \sim 10^{-4}$ and match 1D centerline velocities due to kinematic data supervision ($u=\psi_y, v=-\psi_x$). However, because continuous mesh-free PINNs lack discrete spatial stencils to evaluate **Thom's wall-vorticity formula** ($\omega_w = -2\psi_1/h^2 - 2U/h$), the coupled optimizer suffers from operator stiffness near solid walls, suppressing secondary corner eddy intensity by over $50\%$ ($\psi_{\max} = 0.872 \times 10^{-3}$ vs $1.766 \times 10^{-3}$ in FDM).
 * **Continuous Hodge Projection in $\psi-p$:** Retaining Pressure ($p$) acts as an elliptic Lagrange multiplier (Helmholtz-Hodge projection) that stabilizes convective momentum transport, accurately capturing primary and secondary vortex cores and near-wall shear without auxiliary boundary approximations.
 
 ---
@@ -34,21 +34,21 @@ This repository presents a controlled, formulation-level investigation of 2D ste
 | **Botella & Peyret (1998)** | $(0.5312, 0.5653)$ | -0.1189 | $(0.8641, 0.1118)$ | 1.729 |
 | **Reference FDM ($251\times 251$)** | $(0.5360, 0.5720)$ | -0.1067 | $(0.8560, 0.1160)$ | 1.766 |
 | **$\psi-p$ PINN (Proposed)** | **(0.5418, 0.5819)** | **-0.1042** | **(0.8863, 0.1672)** | **2.499** |
-| **$\psi-\omega$ PINN (Transport)** | $(0.5318, 0.6087)$ | -0.1074 | $(0.8896, 0.1304)$ | 0.872 |
+| **$\psi-\omega$ PINN (Coupled)** | $(0.5318, 0.6087)$ | -0.1074 | $(0.8896, 0.1304)$ | 0.872 |
 
 ### 2. Quantitative Centerline Velocity Error Norms
 | Formulation | $\epsilon_{L_2}(u)$ [%] | $\epsilon_{L_\infty}(u)$ | $\epsilon_{L_2}(v)$ [%] | $\epsilon_{L_\infty}(v)$ |
 | :--- | :---: | :---: | :---: | :---: |
 | **Reference FDM ($N=251$)** | 10.42 | 0.070 | 14.46 | 0.135 |
 | **$\psi-p$ PINN (Proposed)** | **9.87** | 0.077 | 15.57 | 0.141 |
-| **$\psi-\omega$ PINN (Transport)** | 11.02 | 0.077 | **14.26** | **0.131** |
+| **$\psi-\omega$ PINN (Coupled)** | 11.02 | 0.077 | **14.26** | **0.131** |
 
 ### 3. Integrated Global Flow Quantities
 | Model / Formulation | Kinetic Energy $E_k$ | Global Enstrophy $\mathcal{E}$ | Status |
 | :--- | :---: | :---: | :--- |
 | **Reference FDM ($N=251$)** | 0.0374 | **29.57** | Exact Benchmark |
 | **$\psi-p$ PINN (Proposed)** | 0.0333 | **4.72** | Physically Consistent & Sharp Shearing |
-| **$\psi-\omega$ PINN (Transport)** | 0.0352 | **4.29** | Diffused Wall Vorticity |
+| **$\psi-\omega$ PINN (Coupled)** | 0.0352 | **4.29** | Diffused Wall Vorticity |
 
 ---
 
