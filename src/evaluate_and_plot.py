@@ -412,18 +412,19 @@ def emit_latex_tables(metrics_dict, out_dirs=None):
 \\caption{{Comparison of Primary and Secondary Vortex Center Locations and Streamfunction Intensities at $\\mathrm{{Re}} = 1000$.}}
 \\label{{tab:vortex_centers}}
 \\small
+\\setlength{{\\tabcolsep}}{{4.5pt}}
 \\begin{{tabular}}{{lcccccc}}
-\\hline
+\\toprule
 \\textbf{{Method / Formulation}} & \\multicolumn{{3}}{{c}}{{\\textbf{{Primary Vortex}}}} & \\multicolumn{{3}}{{c}}{{\\textbf{{Bottom-Right Secondary Vortex}}}} \\\\
-\\cline{{2-4}} \\cline{{5-7}}
+\\cmidrule(lr){{2-4}} \\cmidrule(lr){{5-7}}
 & $x_c$ & $y_c$ & $\\psi_{{\\min}}$ & $x_{{\\mathrm{{BR}}}}$ & $y_{{\\mathrm{{BR}}}}$ & $\\psi_{{\\max}} \\times 10^3$ \\\\
-\\hline
+\\midrule
 Ghia et al. (1982) \\cite{{ghia1982high}} & 0.5313 & 0.5625 & -0.1179 & 0.8594 & 0.1094 & 1.750 \\\\
 Botella \\& Peyret (1998) \\cite{{botella1998benchmark}} & 0.5312 & 0.5653 & -0.1189 & 0.8641 & 0.1118 & 1.729 \\\\
 Reference FDM (Present, $251\\times 251$) & {v_fdm['primary']['x']:.4f} & {v_fdm['primary']['y']:.4f} & {v_fdm['primary']['psi']:.4f} & {v_fdm['bot_right']['x']:.4f} & {v_fdm['bot_right']['y']:.4f} & {v_fdm['bot_right']['psi']*1000:.3f} \\\\
 $\\psi\\text{{--}}p$ PINN (Proposed) & {v_p['primary']['x']:.4f} & {v_p['primary']['y']:.4f} & {v_p['primary']['psi']:.4f} & {v_p['bot_right']['x']:.4f} & {v_p['bot_right']['y']:.4f} & {v_p['bot_right']['psi']*1000:.3f} \\\\
-$\\psi\\text{{--}}\\omega$ PINN (Transport Only) & {v_w['primary']['x']:.4f} & {v_w['primary']['y']:.4f} & {v_w['primary']['psi']:.4f} & {v_w['bot_right']['x']:.4f} & {v_w['bot_right']['y']:.4f} & {v_w['bot_right']['psi']*1000:.3f} \\\\
-\\hline
+$\\psi\\text{{--}}\\omega$ PINN (Coupled) & {v_w['primary']['x']:.4f} & {v_w['primary']['y']:.4f} & {v_w['primary']['psi']:.4f} & {v_w['bot_right']['x']:.4f} & {v_w['bot_right']['y']:.4f} & {v_w['bot_right']['psi']*1000:.3f} \\\\
+\\bottomrule
 \\end{{tabular}}
 \\end{{table}}
 """
@@ -433,14 +434,15 @@ $\\psi\\text{{--}}\\omega$ PINN (Transport Only) & {v_w['primary']['x']:.4f} & {
 \\centering
 \\caption{{Quantitative Velocity Error Norms Relative to Ghia et al. (1982) Centerline Benchmarks at $\\mathrm{{Re}} = 1000$.}}
 \\label{{tab:velocity_errors}}
+\\small
 \\begin{{tabular}}{{lcccc}}
-\\hline
+\\toprule
 \\textbf{{Formulation}} & $\\epsilon_{{L_2}}(u)$ [\\%] & $\\epsilon_{{L_\\infty}}(u)$ & $\\epsilon_{{L_2}}(v)$ [\\%] & $\\epsilon_{{L_\\infty}}(v)$ \\\\
-\\hline
+\\midrule
 Reference FDM ($N=251$) & {met_fdm['l2_u_centerline']*100:.2f} & {met_fdm['linf_u_centerline']:.3f} & {met_fdm['l2_v_centerline']*100:.2f} & {met_fdm['linf_v_centerline']:.3f} \\\\
 $\\psi\\text{{--}}p$ PINN (Proposed) & {met_p['l2_u_centerline']*100:.2f} & {met_p['linf_u_centerline']:.3f} & {met_p['l2_v_centerline']*100:.2f} & {met_p['linf_v_centerline']:.3f} \\\\
-$\\psi\\text{{--}}\\omega$ PINN (Transport) & {met_w['l2_u_centerline']*100:.2f} & {met_w['linf_u_centerline']:.3f} & {met_w['l2_v_centerline']*100:.2f} & {met_w['linf_v_centerline']:.3f} \\\\
-\\hline
+$\\psi\\text{{--}}\\omega$ PINN (Coupled) & {met_w['l2_u_centerline']*100:.2f} & {met_w['linf_u_centerline']:.3f} & {met_w['l2_v_centerline']*100:.2f} & {met_w['linf_v_centerline']:.3f} \\\\
+\\bottomrule
 \\end{{tabular}}
 \\end{{table}}
 """
@@ -450,14 +452,15 @@ $\\psi\\text{{--}}\\omega$ PINN (Transport) & {met_w['l2_u_centerline']*100:.2f}
 \\centering
 \\caption{{Integrated Global Flow Quantities: Kinetic Energy $E_k$ and Enstrophy $\\mathcal{{E}}$ at $\\mathrm{{Re}} = 1000$.}}
 \\label{{tab:energetics}}
+\\small
 \\begin{{tabular}}{{lccc}}
-\\hline
-\\textbf{{Model / Benchmark}} & \\textbf{{Kinetic Energy}} $E_k$ & \\textbf{{Global Enstrophy}} $\\mathcal{{E}}$ & \\textbf{{Topology Fidelity}} \\\\
-\\hline
+\\toprule
+\\textbf{{Model / Benchmark}} & \\textbf{{Kinetic Energy}} $E_k$ & \\textbf{{Global Enstrophy}} $\\mathcal{{E}}$ & \\textbf{{Topology Status}} \\\\
+\\midrule
 Reference FDM ($N=251$) & {int_fdm['kinetic_energy']:.4f} & {int_fdm['enstrophy']:.2f} & Exact Benchmark \\\\
 $\\psi\\text{{--}}p$ PINN (Proposed) & {int_p['kinetic_energy']:.4f} & {int_p['enstrophy']:.2f} & Physically Consistent \\\\
-$\\psi\\text{{--}}\\omega$ PINN (Transport) & {int_w['kinetic_energy']:.4f} & {int_w['enstrophy']:.4f} & Dissipated (False Convergence) \\\\
-\\hline
+$\\psi\\text{{--}}\\omega$ PINN (Coupled) & {int_w['kinetic_energy']:.4f} & {int_w['enstrophy']:.2f} & Diffused Wall Vorticity \\\\
+\\bottomrule
 \\end{{tabular}}
 \\end{{table}}
 """

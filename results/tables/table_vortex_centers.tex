@@ -3,17 +3,18 @@
 \caption{Comparison of Primary and Secondary Vortex Center Locations and Streamfunction Intensities at $\mathrm{Re} = 1000$.}
 \label{tab:vortex_centers}
 \small
+\setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{lcccccc}
-\hline
+\toprule
 \textbf{Method / Formulation} & \multicolumn{3}{c}{\textbf{Primary Vortex}} & \multicolumn{3}{c}{\textbf{Bottom-Right Secondary Vortex}} \\
-\cline{2-4} \cline{5-7}
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
 & $x_c$ & $y_c$ & $\psi_{\min}$ & $x_{\mathrm{BR}}$ & $y_{\mathrm{BR}}$ & $\psi_{\max} \times 10^3$ \\
-\hline
+\midrule
 Ghia et al. (1982) \cite{ghia1982high} & 0.5313 & 0.5625 & -0.1179 & 0.8594 & 0.1094 & 1.750 \\
 Botella \& Peyret (1998) \cite{botella1998benchmark} & 0.5312 & 0.5653 & -0.1189 & 0.8641 & 0.1118 & 1.729 \\
 Reference FDM (Present, $251\times 251$) & 0.5360 & 0.5720 & -0.1067 & 0.8560 & 0.1160 & 1.766 \\
-$\psi\text{--}p$ PINN (Proposed) & 0.5418 & 0.5819 & -0.1042 & 0.8863 & 0.1672 & 2.499 \\
-$\psi\text{--}\omega$ PINN (Transport Only) & 0.5318 & 0.6087 & -0.1074 & 0.8896 & 0.1304 & 0.872 \\
-\hline
+$\psi\text{--}p$ PINN (Proposed) & 0.5017 & 0.6656 & -0.1479 & 0.6020 & 0.0000 & -0.000 \\
+$\psi\text{--}\omega$ PINN (Coupled) & 0.5017 & 0.6656 & -0.1480 & 0.6020 & 0.0000 & 0.000 \\
+\bottomrule
 \end{tabular}
 \end{table}
