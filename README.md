@@ -36,17 +36,17 @@ This repository presents a controlled, formulation-level investigation of 2D ste
 | **$\psi-p$ PINN (Proposed)** | **(0.5418, 0.5819)** | **-0.1042** | **(0.8863, 0.1672)** | **2.499** |
 | **$\psi-\omega$ PINN (Coupled)** | $(0.5318, 0.6087)$ | -0.1074 | $(0.8896, 0.1304)$ | 0.872 |
 
-### 2. Quantitative Centerline Velocity Error Norms
+### 2. Quantitative Centerline Velocity Error Norms (Relative to Ghia et al. 1982)
 | Formulation | $\epsilon_{L_2}(u)$ [%] | $\epsilon_{L_\infty}(u)$ | $\epsilon_{L_2}(v)$ [%] | $\epsilon_{L_\infty}(v)$ |
 | :--- | :---: | :---: | :---: | :---: |
-| **Reference FDM ($N=251$)** | 10.42 | 0.070 | 14.46 | 0.135 |
-| **$\psi-p$ PINN (Proposed)** | **9.87** | 0.077 | 15.57 | 0.141 |
-| **$\psi-\omega$ PINN (Coupled)** | 11.02 | 0.077 | **14.26** | **0.131** |
+| **Reference FDM ($N=251$)** | 10.42 | 0.070 | 10.41 | 0.050 |
+| **$\psi-p$ PINN (Proposed)** | 44.37 | 0.352 | 34.24 | 0.240 |
+| **$\psi-\omega$ PINN (Coupled)** | 44.45 | 0.353 | 34.23 | 0.240 |
 
 ### 3. Integrated Global Flow Quantities
 | Model / Formulation | Kinetic Energy $E_k$ | Global Enstrophy $\mathcal{E}$ | Status |
 | :--- | :---: | :---: | :--- |
-| **Reference FDM ($N=251$)** | 0.0374 | **29.57** | Exact Benchmark |
+| **Reference FDM ($N=251$)** | 0.0374 | **29.57** | Reference Baseline |
 | **$\psi-p$ PINN (Proposed)** | 0.0333 | **4.72** | Physically Consistent & Sharp Shearing |
 | **$\psi-\omega$ PINN (Coupled)** | 0.0352 | **4.29** | Diffused Wall Vorticity |
 
