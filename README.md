@@ -33,15 +33,22 @@ This repository presents a controlled, formulation-level investigation of 2D ste
 | **Ghia et al. (1982)** | $(0.5313, 0.5625)$ | -0.1179 | $(0.8594, 0.1094)$ | 1.750 |
 | **Botella & Peyret (1998)** | $(0.5312, 0.5653)$ | -0.1189 | $(0.8641, 0.1118)$ | 1.729 |
 | **Reference FDM ($251\times 251$)** | $(0.5360, 0.5720)$ | -0.1067 | $(0.8560, 0.1160)$ | 1.766 |
-| **$\psi-p$ PINN (Proposed)** | **(0.5318, 0.5652)** | **-0.1014** | **(0.8495, 0.1070)** | **1.671** |
-| **$\psi-\omega$ PINN (Transport)** | $(0.5418, 0.5853)$ | -0.1041 | $(0.8328, 0.1271)$ | 2.455 |
+| **$\psi-p$ PINN (Proposed)** | **(0.5418, 0.5819)** | **-0.1042** | **(0.8863, 0.1672)** | **2.499** |
+| **$\psi-\omega$ PINN (Transport)** | $(0.5318, 0.6087)$ | -0.1074 | $(0.8896, 0.1304)$ | 0.872 |
 
-### 2. Integrated Global Flow Quantities
+### 2. Quantitative Centerline Velocity Error Norms
+| Formulation | $\epsilon_{L_2}(u)$ [%] | $\epsilon_{L_\infty}(u)$ | $\epsilon_{L_2}(v)$ [%] | $\epsilon_{L_\infty}(v)$ |
+| :--- | :---: | :---: | :---: | :---: |
+| **Reference FDM ($N=251$)** | 10.42 | 0.070 | 14.46 | 0.135 |
+| **$\psi-p$ PINN (Proposed)** | **9.87** | 0.077 | 15.57 | 0.141 |
+| **$\psi-\omega$ PINN (Transport)** | 11.02 | 0.077 | **14.26** | **0.131** |
+
+### 3. Integrated Global Flow Quantities
 | Model / Formulation | Kinetic Energy $E_k$ | Global Enstrophy $\mathcal{E}$ | Status |
 | :--- | :---: | :---: | :--- |
 | **Reference FDM ($N=251$)** | 0.0374 | **29.57** | Exact Benchmark |
-| **$\psi-p$ PINN (Proposed)** | 0.0304 | **4.47** | Physically Consistent & Vorticity Formed |
-| **$\psi-\omega$ PINN (Transport)** | 0.0346 | **0.0015** | **99.99% Dissipated (False Convergence)** |
+| **$\psi-p$ PINN (Proposed)** | 0.0333 | **4.72** | Physically Consistent & Sharp Shearing |
+| **$\psi-\omega$ PINN (Transport)** | 0.0352 | **4.29** | Diffused Wall Vorticity |
 
 ---
 
