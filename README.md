@@ -111,11 +111,18 @@ cd pinn-fluid-formulations
 pip install -r requirements.txt
 ```
 
-### 2. Run Full Evaluation & Generate Publication Figures
-To evaluate the pretrained models, compute vortex locations, and regenerate all 7 publication figures:
+### 2. Run Full Evaluation, Benchmarks & Export ZIP Bundle
+To evaluate the pretrained models, compute vortex locations, and export JSON metrics, CSV profiles, LaTeX tables, all 7 publication figures, and a one-click `results_bundle.zip`:
 ```bash
 python -m src.evaluate_and_plot
 ```
+Outputs are automatically generated in `results/`:
+- `results/metrics_summary.json`: Quantitative error norms, vortex centers, enstrophy, and kinetic energy.
+- `results/centerline_profiles.csv`: 1D vertical and horizontal centerline velocity profiles.
+- `results/vortex_energetics_summary.csv`: Tabular benchmark summary.
+- `results/tables/`: Publication-ready LaTeX tables (`table_*.tex`).
+- `results/figures/`: High-resolution vector PDFs and PNGs.
+- `results_bundle.zip`: Downloadable archive packaging all outputs.
 
 ### 3. Train Models from Scratch
 To retrain both $\psi-p$ and $\psi-\omega$ PINNs on GPU ($8,000$ epochs with 3-stage curriculum):

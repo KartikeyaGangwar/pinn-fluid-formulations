@@ -15,6 +15,10 @@ Generates:
 
 import os
 import sys
+import json
+import csv
+import shutil
+import zipfile
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -189,16 +193,16 @@ def generate_figure2_convergence(out_dir='paper/figures'):
     print("Saved Figure 2: Loss Convergence Trajectories")
 
 def generate_figure3_topologies(fdm_sol, psi_p_sol, psi_w_sol, out_dir='paper/figures'):
-    fig, axs = plt.subplots(3, 4, figsize=(18, 13))
+    fig, axs = plt.subplots(3, 4, figsize=(15, 10), constrained_layout=True)
     models_data = [
-        ("Reference FDM (Ground Truth)", fdm_sol),
-        (r"Streamfunction--Pressure ($\psi\text{--}p$ PINN)", psi_p_sol),
-        (r"Streamfunction--Vorticity ($\psi\text{--}\omega$ PINN)", psi_w_sol)
+        ("Reference FDM", fdm_sol),
+        (r"$\psi\text{--}p$ PINN", psi_p_sol),
+        (r"$\psi\text{--}\omega$ PINN", psi_w_sol)
     ]
 
     col_titles = [r"Streamlines ($\psi$)", r"Vorticity ($\omega$)", r"Velocity Magnitude $|V|$", r"Pressure ($p$)"]
     for j, col_t in enumerate(col_titles):
-        axs[0, j].set_title(col_t, fontsize=13, fontweight='bold', pad=8)
+        axs[0, j].set_title(col_t, fontsize=12, fontweight='bold', pad=6)
 
     for i, (m_label, data) in enumerate(models_data):
         X, Y = data['X'], data['Y']
@@ -206,50 +210,43 @@ def generate_figure3_topologies(fdm_sol, psi_p_sol, psi_w_sol, out_dir='paper/fi
 
         # 1. Streamlines
         ax = axs[i, 0]
-        levels_psi = np.linspace(-0.115, 0.002, 35)
+        levels_psi = np.linspace(-0.115, 0.002, 30)
         ax.contourf(X, Y, psi, levels=levels_psi, cmap='viridis', alpha=0.85, extend='both')
-        ax.contour(X, Y, psi, levels=levels_psi, colors='k', linewidths=0.5, alpha=0.6)
-        ax.set_ylabel(m_label + '\n\n' + r'$y$', fontsize=11, fontweight='bold')
+        ax.contour(X, Y, psi, levels=levels_psi, colors='k', linewidths=0.5, alpha=0.5)
+        ax.set_ylabel(m_label + '\n' + r'$y$', fontsize=11, fontweight='bold')
         ax.set_aspect('equal')
 
         # 2. Vorticity
         ax = axs[i, 1]
         w_max = np.percentile(np.abs(fdm_sol['omega']), 98.0)
-        im_w = ax.contourf(X, Y, omega, levels=60, cmap='RdBu_r', vmin=-w_max, vmax=w_max, extend='both')
-        div = make_axes_locatable(ax)
-        cax = div.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(im_w, cax=cax)
+        im_w = ax.contourf(X, Y, omega, levels=40, cmap='RdBu_r', vmin=-w_max, vmax=w_max, extend='both')
+        fig.colorbar(im_w, ax=ax, shrink=0.75, pad=0.03)
         ax.set_aspect('equal')
 
         # 3. Speed
         ax = axs[i, 2]
-        im_s = ax.contourf(X, Y, speed, levels=40, cmap='plasma', vmin=0.0, vmax=1.0)
-        div = make_axes_locatable(ax)
-        cax = div.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(im_s, cax=cax)
+        im_s = ax.contourf(X, Y, speed, levels=30, cmap='plasma', vmin=0.0, vmax=1.0)
+        fig.colorbar(im_s, ax=ax, shrink=0.75, pad=0.03)
         ax.set_aspect('equal')
 
         # 4. Pressure
         ax = axs[i, 3]
         if np.any(p):
             p_lim = np.percentile(np.abs(p), 98.0)
-            im_p = ax.contourf(X, Y, p, levels=40, cmap='coolwarm', vmin=-p_lim, vmax=p_lim, extend='both')
-            div = make_axes_locatable(ax)
-            cax = div.append_axes("right", size="5%", pad=0.05)
-            plt.colorbar(im_p, cax=cax)
+            im_p = ax.contourf(X, Y, p, levels=30, cmap='coolwarm', vmin=-p_lim, vmax=p_lim, extend='both')
+            fig.colorbar(im_p, ax=ax, shrink=0.75, pad=0.03)
         else:
-            ax.text(0.5, 0.5, "N/A\n(Vorticity Formulation)", ha='center', va='center', fontsize=12, color='gray')
+            ax.text(0.5, 0.5, "N/A\n(Vorticity Formulation)", ha='center', va='center', fontsize=11, color='gray')
         ax.set_aspect('equal')
 
         for ax_k in axs[i, :]:
             ax_k.set_xlim(0, 1)
             ax_k.set_ylim(0, 1)
-            ax_k.set_xlabel(r'$x$', fontsize=10)
+            ax_k.set_xlabel(r'$x$', fontsize=9)
 
-    plt.tight_layout()
     for ext in ['.png', '.pdf']:
-        fig.savefig(os.path.join(out_dir, f'fig3_flow_topologies_comparison{ext}'), dpi=300, bbox_inches='tight')
-        fig.savefig(os.path.join('figures', f'fig3_flow_topologies_comparison{ext}'), dpi=300, bbox_inches='tight')
+        fig.savefig(os.path.join(out_dir, f'fig3_flow_topologies_comparison{ext}'), dpi=200, bbox_inches='tight')
+        fig.savefig(os.path.join('figures', f'fig3_flow_topologies_comparison{ext}'), dpi=200, bbox_inches='tight')
     plt.close(fig)
     print("Saved Figure 3: Flow Topologies")
 
@@ -473,6 +470,90 @@ $\\psi\\text{{--}}\\omega$ PINN (Transport) & {int_w['kinetic_energy']:.4f} & {i
             f.write(t3_content)
     print("Emitted LaTeX benchmark tables.")
 
+def export_structured_results(metrics_dict, u_c_fdm, v_c_fdm, u_c_p, v_c_p, u_c_w, v_c_w, out_dir='results'):
+    os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(os.path.join(out_dir, 'tables'), exist_ok=True)
+    os.makedirs(os.path.join(out_dir, 'figures'), exist_ok=True)
+
+    # 1. JSON Metrics Export
+    def sanitize(obj):
+        if isinstance(obj, dict):
+            return {k: sanitize(v) for k, v in obj.items()}
+        elif isinstance(obj, (list, tuple)):
+            return [sanitize(v) for v in obj]
+        elif isinstance(obj, (np.floating, float)):
+            return float(obj)
+        elif isinstance(obj, (np.integer, int)):
+            return int(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return obj
+
+    json_path = os.path.join(out_dir, 'metrics_summary.json')
+    with open(json_path, 'w', encoding='utf-8') as f:
+        json.dump(sanitize(metrics_dict), f, indent=4)
+    print(f"[EXPORT] Saved {json_path}")
+
+    # 2. CSV: Centerline Profiles
+    csv_centerline_path = os.path.join(out_dir, 'centerline_profiles.csv')
+    with open(csv_centerline_path, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['y_coord', 'u_fdm', 'u_psi_p', 'u_psi_omega', 'x_coord', 'v_fdm', 'v_psi_p', 'v_psi_omega'])
+        n_pts = min(len(GHIA_Y), len(GHIA_X))
+        for i in range(n_pts):
+            writer.writerow([
+                float(GHIA_Y[i]), float(u_c_fdm[i]), float(u_c_p[i]), float(u_c_w[i]),
+                float(GHIA_X[i]), float(v_c_fdm[i]), float(v_c_p[i]), float(v_c_w[i])
+            ])
+    print(f"[EXPORT] Saved {csv_centerline_path}")
+
+    # 3. CSV: Vortex & Energetics Summary Table
+    csv_summary_path = os.path.join(out_dir, 'vortex_energetics_summary.csv')
+    v_fdm, v_p, v_w = metrics_dict['v_fdm'], metrics_dict['v_p'], metrics_dict['v_w']
+    int_fdm, int_p, int_w = metrics_dict['int_fdm'], metrics_dict['int_p'], metrics_dict['int_w']
+    met_fdm, met_p, met_w = metrics_dict['met_fdm'], metrics_dict['met_p'], metrics_dict['met_w']
+
+    with open(csv_summary_path, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Model_Formulation', 'Primary_Vortex_X', 'Primary_Vortex_Y', 'Primary_Psi_Min',
+                         'BR_Secondary_X', 'BR_Secondary_Y', 'BR_Psi_Max', 'Kinetic_Energy', 'Enstrophy',
+                         'L2_Error_U_pct', 'L2_Error_V_pct', 'Linf_Error_U', 'Linf_Error_V'])
+        writer.writerow(['Reference_FDM', v_fdm['primary']['x'], v_fdm['primary']['y'], v_fdm['primary']['psi'],
+                         v_fdm['bot_right']['x'], v_fdm['bot_right']['y'], v_fdm['bot_right']['psi'],
+                         int_fdm['kinetic_energy'], int_fdm['enstrophy'],
+                         met_fdm['l2_u_centerline']*100, met_fdm['l2_v_centerline']*100,
+                         met_fdm['linf_u_centerline'], met_fdm['linf_v_centerline']])
+        writer.writerow(['Psi_P_PINN', v_p['primary']['x'], v_p['primary']['y'], v_p['primary']['psi'],
+                         v_p['bot_right']['x'], v_p['bot_right']['y'], v_p['bot_right']['psi'],
+                         int_p['kinetic_energy'], int_p['enstrophy'],
+                         met_p['l2_u_centerline']*100, met_p['l2_v_centerline']*100,
+                         met_p['linf_u_centerline'], met_p['linf_v_centerline']])
+        writer.writerow(['Psi_Omega_PINN', v_w['primary']['x'], v_w['primary']['y'], v_w['primary']['psi'],
+                         v_w['bot_right']['x'], v_w['bot_right']['y'], v_w['bot_right']['psi'],
+                         int_w['kinetic_energy'], int_w['enstrophy'],
+                         met_w['l2_u_centerline']*100, met_w['l2_v_centerline']*100,
+                         met_w['linf_u_centerline'], met_w['linf_v_centerline']])
+    print(f"[EXPORT] Saved {csv_summary_path}")
+
+    # 4. Copy Figures to results/figures/
+    if os.path.exists('figures'):
+        for fig_f in os.listdir('figures'):
+            if fig_f.endswith('.png') or fig_f.endswith('.pdf'):
+                shutil.copy(os.path.join('figures', fig_f), os.path.join(out_dir, 'figures', fig_f))
+
+    # 5. Emit LaTeX tables into results/tables/
+    emit_latex_tables(metrics_dict, out_dirs=['paper', os.path.join(out_dir, 'tables')])
+
+    # 6. Create ZIP Bundle
+    zip_path = 'results_bundle.zip'
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(out_dir):
+            for file in files:
+                full_p = os.path.join(root, file)
+                rel_p = os.path.relpath(full_p, start='.')
+                zipf.write(full_p, rel_p)
+    print(f"\n[BUNDLE CREATED] Successfully packaged complete results to: {zip_path}")
+
 def run_full_evaluation():
     device = get_device()
     print(f"Running Full Evaluation Suite on device: {device}")
@@ -583,10 +664,12 @@ def run_full_evaluation():
     generate_figure5_vorticity_profiles(fdm_sol, psi_p_sol, psi_w_sol)
     generate_figure6_re_sweep()
     generate_figure7_datasparsity()
-    emit_latex_tables(metrics_dict)
+
+    # Export structured JSON, CSV, LaTeX tables, and ZIP bundle
+    export_structured_results(metrics_dict, u_c_fdm, v_c_fdm, u_c_p, v_c_p, u_c_w, v_c_w, out_dir='results')
 
     print("\n=======================================================")
-    print("[SUCCESS] All 7 Publication Figures and LaTeX Tables Generated!")
+    print("[SUCCESS] All 7 Publication Figures, JSON, CSV & ZIP Bundle Generated!")
     print("=======================================================\n")
 
 if __name__ == '__main__':
