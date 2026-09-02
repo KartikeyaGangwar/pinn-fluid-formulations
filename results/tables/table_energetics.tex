@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\caption{Integrated Global Flow Quantities: Kinetic Energy $E_k$ and Enstrophy $\mathcal{E}$ at $\mathrm{Re} = 1000$.}
+\label{tab:energetics}
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Model / Benchmark} & \textbf{Kinetic Energy} $E_k$ & \textbf{Global Enstrophy} $\mathcal{E}$ & \textbf{Topology Status} \\
+\midrule
+Reference FDM ($N=251$) & 0.0374 & 29.57 & Exact Benchmark \\
+$\psi\text{--}p$ PINN (Proposed) & 0.0333 & 4.72 & Physically Consistent \\
+$\psi\text{--}\omega$ PINN (Coupled) & 0.0352 & 4.29 & Diffused Wall Vorticity \\
+\bottomrule
+\end{tabular}
+\end{table}

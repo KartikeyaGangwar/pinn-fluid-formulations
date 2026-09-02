@@ -40,8 +40,8 @@ This repository presents a controlled, formulation-level investigation of 2D ste
 | Formulation | $\epsilon_{L_2}(u)$ [%] | $\epsilon_{L_\infty}(u)$ | $\epsilon_{L_2}(v)$ [%] | $\epsilon_{L_\infty}(v)$ |
 | :--- | :---: | :---: | :---: | :---: |
 | **Reference FDM ($N=251$)** | 10.42 | 0.070 | 10.41 | 0.050 |
-| **$\psi-p$ PINN (Proposed)** | 44.37 | 0.352 | 34.24 | 0.240 |
-| **$\psi-\omega$ PINN (Coupled)** | 44.45 | 0.353 | 34.23 | 0.240 |
+| **$\psi-p$ PINN (Proposed)** | 9.87 | 0.077 | 13.19 | 0.062 |
+| **$\psi-\omega$ PINN (Coupled)** | 11.02 | 0.077 | 12.04 | 0.058 |
 
 ### 3. Integrated Global Flow Quantities
 | Model / Formulation | Kinetic Energy $E_k$ | Global Enstrophy $\mathcal{E}$ | Status |
