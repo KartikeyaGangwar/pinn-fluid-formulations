@@ -38,14 +38,13 @@ from src.benchmark_data import (
 plt.rcParams.update({
     "font.family": "serif",
     "font.size": 11,
-    "axes.titlesize": 13,
-    "axes.labelsize": 12,
+    "axes.titlesize": 12,
+    "axes.labelsize": 11,
     "xtick.labelsize": 10,
     "ytick.labelsize": 10,
     "legend.fontsize": 10,
-    "figure.titlesize": 14,
-    "figure.dpi": 300,
-    "savefig.dpi": 300,
+    "figure.titlesize": 13,
+    "figure.dpi": 100,
     "savefig.bbox": "tight"
 })
 
@@ -91,8 +90,21 @@ def evaluate_model_on_grid(model, formulation='psi_p', N_vis=300, device='cpu'):
         'speed': np.sqrt(u_arr**2 + v_arr**2)
     }
 
-def generate_figure1_schematic(out_dir='paper/figures'):
-    fig, ax = plt.subplots(figsize=(7, 6))
+def save_figure_safe(fig, filename_base, out_dir=None, dpi=200):
+    targets = ['figures', 'results/figures']
+    if out_dir is not None and out_dir not in targets:
+        if not out_dir.startswith('paper') or os.path.exists('paper'):
+            targets.append(out_dir)
+    if os.path.exists('paper') and 'paper/figures' not in targets:
+        targets.append('paper/figures')
+
+    for target in targets:
+        os.makedirs(target, exist_ok=True)
+        for ext in ['.png', '.pdf']:
+            fig.savefig(os.path.join(target, f"{filename_base}{ext}"), dpi=dpi, bbox_inches='tight')
+
+def generate_figure1_schematic(out_dir=None):
+    fig, ax = plt.subplots(figsize=(6, 5))
     # Cavity square
     ax.plot([0, 1, 1, 0, 0], [0, 0, 1, 1, 0], 'k-', lw=3)
     # Moving lid
@@ -117,14 +129,12 @@ def generate_figure1_schematic(out_dir='paper/figures'):
     ax.axis('off')
     ax.set_title(r'2D Steady Incompressible Lid-Driven Cavity Benchmark', fontsize=12, pad=15)
 
-    for ext in ['.png', '.pdf']:
-        fig.savefig(os.path.join(out_dir, f'fig1_schematic_cavity{ext}'), dpi=300, bbox_inches='tight')
-        fig.savefig(os.path.join('figures', f'fig1_schematic_cavity{ext}'), dpi=300, bbox_inches='tight')
+    save_figure_safe(fig, 'fig1_schematic_cavity', out_dir=out_dir, dpi=200)
     plt.close(fig)
     print("Saved Figure 1: Schematic")
 
-def generate_figure2_convergence(out_dir='paper/figures'):
-    fig, axs = plt.subplots(1, 3, figsize=(18, 5))
+def generate_figure2_convergence(out_dir=None):
+    fig, axs = plt.subplots(1, 3, figsize=(14, 4.2))
 
     hp_path = None
     hw_path = None
@@ -156,43 +166,40 @@ def generate_figure2_convergence(out_dir='paper/figures'):
         grad_w = 18.0 * np.exp(-epochs_w / 1200.0) + 0.35
 
     # Panel 1: Total Loss
-    axs[0].semilogy(epochs_p, loss_tot_p, 'b-', lw=2.2, label=r'$\psi\text{--}p$ PINN')
-    axs[0].semilogy(epochs_w, loss_tot_w, 'r--', lw=2.2, label=r'$\psi\text{--}\omega$ PINN')
-    axs[0].axvspan(0, 2000, color='gray', alpha=0.10, label='Phase 1 (Eddy Nucleation)')
-    axs[0].axvspan(2000, 6000, color='blue', alpha=0.05, label='Phase 2 (Balanced)')
-    axs[0].axvspan(6000, 8000, color='green', alpha=0.08, label='Phase 3 (Refinement)')
-    axs[0].set_xlabel('Epoch', fontsize=12)
-    axs[0].set_ylabel(r'Total Loss $\mathcal{L}_{\mathrm{total}}$', fontsize=12)
-    axs[0].set_title(r'Total Training Loss Trajectory', fontsize=12)
+    axs[0].semilogy(epochs_p, loss_tot_p, 'b-', lw=2.0, label=r'$\psi\text{--}p$ PINN')
+    axs[0].semilogy(epochs_w, loss_tot_w, 'r--', lw=2.0, label=r'$\psi\text{--}\omega$ PINN')
+    axs[0].axvspan(0, 2000, color='gray', alpha=0.10, label='Phase 1')
+    axs[0].axvspan(2000, 6000, color='blue', alpha=0.05, label='Phase 2')
+    axs[0].axvspan(6000, 8000, color='green', alpha=0.08, label='Phase 3')
+    axs[0].set_xlabel('Epoch', fontsize=11)
+    axs[0].set_ylabel(r'Total Loss $\mathcal{L}_{\mathrm{total}}$', fontsize=11)
+    axs[0].set_title(r'Total Training Loss', fontsize=12)
     axs[0].grid(True, ls='--', alpha=0.4)
-    axs[0].legend(fontsize=9, loc='upper right')
+    axs[0].legend(fontsize=8.5, loc='upper right')
 
     # Panel 2: PDE Residual Loss
-    axs[1].semilogy(epochs_p, loss_pde_p, 'b-', lw=2.2, label=r'$\psi\text{--}p$ Momentum Residual')
-    axs[1].semilogy(epochs_w, loss_pde_w, 'r--', lw=2.2, label=r'$\psi\text{--}\omega$ Vorticity Residual (Deceptive)')
-    axs[1].set_xlabel('Epoch', fontsize=12)
-    axs[1].set_ylabel(r'PDE Residual Loss $\mathcal{L}_{\mathrm{pde}}$', fontsize=12)
-    axs[1].set_title(r'PDE Residual Evolution (False Convergence)', fontsize=12)
+    axs[1].semilogy(epochs_p, loss_pde_p, 'b-', lw=2.0, label=r'$\psi\text{--}p$ Residual')
+    axs[1].semilogy(epochs_w, loss_pde_w, 'r--', lw=2.0, label=r'$\psi\text{--}\omega$ Residual')
+    axs[1].set_xlabel('Epoch', fontsize=11)
+    axs[1].set_ylabel(r'PDE Residual $\mathcal{L}_{\mathrm{pde}}$', fontsize=11)
+    axs[1].set_title(r'PDE Residual Evolution', fontsize=12)
     axs[1].grid(True, ls='--', alpha=0.4)
-    axs[1].legend(fontsize=10, loc='upper right')
+    axs[1].legend(fontsize=8.5, loc='upper right')
 
     # Panel 3: Gradient Norm
-    axs[2].plot(epochs_p, grad_p, 'b-', lw=2.0, label=r'$\psi\text{--}p$ Gradient Norm')
-    axs[2].plot(epochs_w, grad_w, 'r--', lw=2.0, label=r'$\psi\text{--}\omega$ Gradient Norm')
-    axs[2].set_xlabel('Epoch', fontsize=12)
-    axs[2].set_ylabel(r'Gradient Norm $\|\nabla_\theta \mathcal{L}\|_2$', fontsize=12)
-    axs[2].set_title(r'Optimization Landscape Stability', fontsize=12)
+    axs[2].plot(epochs_p, grad_p, 'b-', lw=1.8, label=r'$\psi\text{--}p$ Gradient')
+    axs[2].plot(epochs_w, grad_w, 'r--', lw=1.8, label=r'$\psi\text{--}\omega$ Gradient')
+    axs[2].set_xlabel('Epoch', fontsize=11)
+    axs[2].set_ylabel(r'Gradient Norm $\|\nabla_\theta \mathcal{L}\|_2$', fontsize=11)
+    axs[2].set_title(r'Optimization Stability', fontsize=12)
     axs[2].grid(True, ls='--', alpha=0.4)
-    axs[2].legend(fontsize=10, loc='upper right')
+    axs[2].legend(fontsize=8.5, loc='upper right')
 
-    plt.tight_layout()
-    for ext in ['.png', '.pdf']:
-        fig.savefig(os.path.join(out_dir, f'fig2_loss_convergence{ext}'), dpi=300, bbox_inches='tight')
-        fig.savefig(os.path.join('figures', f'fig2_loss_convergence{ext}'), dpi=300, bbox_inches='tight')
+    save_figure_safe(fig, 'fig2_loss_convergence', out_dir=out_dir, dpi=200)
     plt.close(fig)
     print("Saved Figure 2: Loss Convergence Trajectories")
 
-def generate_figure3_topologies(fdm_sol, psi_p_sol, psi_w_sol, out_dir='paper/figures'):
+def generate_figure3_topologies(fdm_sol, psi_p_sol, psi_w_sol, out_dir=None):
     fig, axs = plt.subplots(3, 4, figsize=(15, 10), constrained_layout=True)
     models_data = [
         ("Reference FDM", fdm_sol),
@@ -244,13 +251,11 @@ def generate_figure3_topologies(fdm_sol, psi_p_sol, psi_w_sol, out_dir='paper/fi
             ax_k.set_ylim(0, 1)
             ax_k.set_xlabel(r'$x$', fontsize=9)
 
-    for ext in ['.png', '.pdf']:
-        fig.savefig(os.path.join(out_dir, f'fig3_flow_topologies_comparison{ext}'), dpi=200, bbox_inches='tight')
-        fig.savefig(os.path.join('figures', f'fig3_flow_topologies_comparison{ext}'), dpi=200, bbox_inches='tight')
+    save_figure_safe(fig, 'fig3_flow_topologies_comparison', out_dir=out_dir, dpi=200)
     plt.close(fig)
     print("Saved Figure 3: Flow Topologies")
 
-def generate_figure4_centerlines(fdm_sol, psi_p_sol, psi_w_sol, out_dir='paper/figures'):
+def generate_figure4_centerlines(fdm_sol, psi_p_sol, psi_w_sol, out_dir=None):
     fig, axs = plt.subplots(1, 2, figsize=(14, 6))
 
     u_ghia_ref = GHIA_U[1000]
@@ -290,13 +295,11 @@ def generate_figure4_centerlines(fdm_sol, psi_p_sol, psi_w_sol, out_dir='paper/f
     plt.suptitle(r'Centerline Velocity Profiles at $\mathrm{Re} = 1000$', fontsize=14, y=1.02)
     plt.tight_layout()
 
-    for ext in ['.png', '.pdf']:
-        fig.savefig(os.path.join(out_dir, f'fig4_centerline_profiles{ext}'), dpi=300, bbox_inches='tight')
-        fig.savefig(os.path.join('figures', f'fig4_centerline_profiles{ext}'), dpi=300, bbox_inches='tight')
+    save_figure_safe(fig, 'fig4_centerline_profiles', out_dir=out_dir, dpi=300)
     plt.close(fig)
     print("Saved Figure 4: Centerlines")
 
-def generate_figure5_vorticity_profiles(fdm_sol, psi_p_sol, psi_w_sol, out_dir='paper/figures'):
+def generate_figure5_vorticity_profiles(fdm_sol, psi_p_sol, psi_w_sol, out_dir=None):
     fig, axs = plt.subplots(1, 2, figsize=(14, 5.5))
     y_fdm = fdm_sol['y']
     x_mid = np.argmin(np.abs(fdm_sol['x'] - 0.5))
@@ -325,13 +328,11 @@ def generate_figure5_vorticity_profiles(fdm_sol, psi_p_sol, psi_w_sol, out_dir='
     ax2.legend(frameon=True, fontsize=10)
 
     plt.tight_layout()
-    for ext in ['.png', '.pdf']:
-        fig.savefig(os.path.join(out_dir, f'fig5_nearwall_vorticity_profiles{ext}'), dpi=300, bbox_inches='tight')
-        fig.savefig(os.path.join('figures', f'fig5_nearwall_vorticity_profiles{ext}'), dpi=300, bbox_inches='tight')
+    save_figure_safe(fig, 'fig5_nearwall_vorticity_profiles', out_dir=out_dir, dpi=300)
     plt.close(fig)
     print("Saved Figure 5: Vorticity and Boundary-Layer Profiles")
 
-def generate_figure6_re_sweep(out_dir='paper/figures'):
+def generate_figure6_re_sweep(out_dir=None):
     fig, axs = plt.subplots(1, 2, figsize=(14, 5.5))
     re_vals = [100, 400, 1000, 3200]
 
@@ -365,13 +366,11 @@ def generate_figure6_re_sweep(out_dir='paper/figures'):
     ax2.legend(frameon=True, fontsize=10)
 
     plt.tight_layout()
-    for ext in ['.png', '.pdf']:
-        fig.savefig(os.path.join(out_dir, f'fig6_reynolds_sweep{ext}'), dpi=300, bbox_inches='tight')
-        fig.savefig(os.path.join('figures', f'fig6_reynolds_sweep{ext}'), dpi=300, bbox_inches='tight')
+    save_figure_safe(fig, 'fig6_reynolds_sweep', out_dir=out_dir, dpi=300)
     plt.close(fig)
     print("Saved Figure 6: Reynolds Sweep")
 
-def generate_figure7_datasparsity(out_dir='paper/figures'):
+def generate_figure7_datasparsity(out_dir=None):
     fig, ax = plt.subplots(figsize=(8, 5.5))
     n_gt = [0, 100, 500, 1000, 3000]
 
@@ -388,13 +387,15 @@ def generate_figure7_datasparsity(out_dir='paper/figures'):
     ax.legend(frameon=True, framealpha=0.95, fontsize=11)
 
     plt.tight_layout()
-    for ext in ['.png', '.pdf']:
-        fig.savefig(os.path.join(out_dir, f'fig7_ablation_datasparsity{ext}'), dpi=300, bbox_inches='tight')
-        fig.savefig(os.path.join('figures', f'fig7_ablation_datasparsity{ext}'), dpi=300, bbox_inches='tight')
+    save_figure_safe(fig, 'fig7_ablation_datasparsity', out_dir=out_dir, dpi=300)
     plt.close(fig)
     print("Saved Figure 7: Data Sparsity Ablation")
 
-def emit_latex_tables(metrics_dict, out_dirs=['paper']):
+def emit_latex_tables(metrics_dict, out_dirs=None):
+    if out_dirs is None:
+        out_dirs = ['results/tables']
+        if os.path.exists('paper'):
+            out_dirs.append('paper')
     v_fdm = metrics_dict['v_fdm']
     v_p = metrics_dict['v_p']
     v_w = metrics_dict['v_w']
@@ -461,6 +462,8 @@ $\\psi\\text{{--}}\\omega$ PINN (Transport) & {int_w['kinetic_energy']:.4f} & {i
 \\end{{table}}
 """
     for out_d in out_dirs:
+        if out_d.startswith('paper') and not os.path.exists('paper'):
+            continue
         os.makedirs(out_d, exist_ok=True)
         with open(os.path.join(out_d, 'table_vortex_centers.tex'), 'w', encoding='utf-8') as f:
             f.write(t1_content)
