@@ -23,6 +23,8 @@ def train_psi_p(Re=1000, epochs=8000, lr=1e-3, device='cuda'):
 
     gt = load_ground_truth('data/gt_data_Re1000.pkl', device)
     x_f, y_f = sample_collocation_points(Nf=8000, device=device)
+    x_anchor = torch.tensor([[0.5]], dtype=torch.float32, device=device)
+    y_anchor = torch.tensor([[0.5]], dtype=torch.float32, device=device)
 
     base = BaseNet([2, 96, 96, 96, 2], activation='silu').to(device)
     model = HardBC_PsiP(base).to(device)
@@ -90,7 +92,8 @@ def train_psi_p(Re=1000, epochs=8000, lr=1e-3, device='cuda'):
                 dv_dx_p = grad(v_p, xg)
                 loss_grad += torch.mean((dv_dx_p[mask_v] - gt['dv_dx'][idx][mask_v])**2)
 
-        loss_gauge = 5e-4 * torch.mean(aux_out**2)
+        _, p_anc = model(x_anchor, y_anchor)
+        loss_gauge = 1e-4 * (p_anc**2).squeeze()
         total_loss = lam_pde * loss_pde + lam_gt * loss_gt + 0.2 * loss_grad + loss_gauge
 
         total_loss.backward()
@@ -147,18 +150,22 @@ def train_psi_omega(Re=1000, epochs=8000, lr=1e-3, device='cuda'):
 
         optimizer.zero_grad()
 
-        # Vorticity Transport Residual
+        # Coupled Streamfunction-Vorticity Residuals
         psi, omega = model(x_f, y_f)
         psi_x = grad(psi, x_f)
         psi_y = grad(psi, y_f)
         u, v = psi_y, -psi_x
+        psi_xx = grad(psi_x, x_f)
+        psi_yy = grad(psi_y, y_f)
+
         omega_x = grad(omega, x_f)
         omega_y = grad(omega, y_f)
         omega_xx = grad(omega_x, x_f)
         omega_yy = grad(omega_y, y_f)
 
+        r_psi = psi_xx + psi_yy + omega
         r_omega = u * omega_x + v * omega_y - (1.0 / Re) * (omega_xx + omega_yy)
-        loss_pde = torch.mean(r_omega**2)
+        loss_pde = torch.mean(r_psi**2) + torch.mean(r_omega**2)
 
         # GT Data Loss
         N_gt = 3000
@@ -192,8 +199,7 @@ def train_psi_omega(Re=1000, epochs=8000, lr=1e-3, device='cuda'):
                 dv_dx_p = grad(v_p, xg)
                 loss_grad += torch.mean((dv_dx_p[mask_v] - gt['dv_dx'][idx][mask_v])**2)
 
-        loss_gauge = 5e-4 * torch.mean(omega_out**2)
-        total_loss = lam_pde * loss_pde + lam_gt * loss_gt + 0.2 * loss_grad + loss_gauge
+        total_loss = lam_pde * loss_pde + lam_gt * loss_gt + 0.2 * loss_grad
 
         total_loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)

@@ -542,14 +542,15 @@ def run_full_evaluation():
             model_psi_w.load_state_dict(state_w)
             print(f"Loaded {w_cand}")
             break
-    psi_w_sol = evaluate_model_on_grid(model_psi_w, formulation='psi_omega_transport', N_vis=300, device=device)
+    psi_w_sol = evaluate_model_on_grid(model_psi_w, formulation='psi_omega_coupled', N_vis=300, device=device)
 
     # Extract learned omega for psi-omega model
     x_t = torch.tensor(psi_w_sol['X'].flatten()[:, None], dtype=torch.float32, device=device)
     y_t = torch.tensor(psi_w_sol['Y'].flatten()[:, None], dtype=torch.float32, device=device)
     with torch.no_grad():
         _, omega_learned = model_psi_w(x_t, y_t)
-    psi_w_sol['omega'] = omega_learned.cpu().numpy().reshape(300, 300)
+    psi_w_sol['omega_head'] = omega_learned.cpu().numpy().reshape(300, 300)
+    psi_w_sol['omega_kin'] = psi_w_sol['omega'].copy()
 
     # Calculate exact vortex centers, energetics, and centerline error metrics
     v_fdm = find_vortex_centers(fdm_sol['X'], fdm_sol['Y'], fdm_sol['psi'])

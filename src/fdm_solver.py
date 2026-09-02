@@ -13,11 +13,12 @@ import time
 import pickle
 
 class LidDrivenCavityFDM:
-    def __init__(self, N=251, Re=1000, U=1.0, L=1.0):
+    def __init__(self, N=251, Re=1000, U=1.0, L=1.0, lid_profile='regularized'):
         self.N = N
         self.Re = Re
         self.U = U
         self.L = L
+        self.lid_profile = lid_profile
         
         self.h = L / (N - 1)
         self.nu = U * L / Re
@@ -25,6 +26,11 @@ class LidDrivenCavityFDM:
         self.x = np.linspace(0, L, N)
         self.y = np.linspace(0, L, N)
         self.X, self.Y = np.meshgrid(self.x, self.y, indexing='xy')
+
+        if self.lid_profile == 'regularized':
+            self.u_lid = 16.0 * (self.x**2) * ((1.0 - self.x)**2)
+        else:
+            self.u_lid = np.full(N, U)
         
         self.psi = np.zeros((N, N))
         self.omega = np.zeros((N, N))
@@ -33,7 +39,7 @@ class LidDrivenCavityFDM:
         self.p = np.zeros((N, N))
         
         CFL_FACTOR = 0.1
-        self.dt = CFL_FACTOR * self.h / self.U
+        self.dt = CFL_FACTOR * self.h / (self.U if self.U > 0 else 1.0)
         self.alpha_adi = (self.nu * self.dt) / (2.0 * self.h**2)
         
         self.u_c = np.zeros((N - 2, N - 2))
@@ -42,7 +48,6 @@ class LidDrivenCavityFDM:
 
     def apply_boundary_conditions(self):
         h = self.h
-        U = self.U
         
         # Streamfunction BCs: psi = 0 on all walls
         self.psi[0, :] = 0.0
@@ -51,10 +56,10 @@ class LidDrivenCavityFDM:
         self.psi[:, -1] = 0.0
         
         # Thom's formula for wall vorticity
-        self.omega[-1, 1:-1] = -2.0 * self.psi[-2, 1:-1] / h**2 - 2.0 * U / h # Top lid
-        self.omega[0, 1:-1]  = -2.0 * self.psi[1, 1:-1] / h**2               # Bottom
-        self.omega[1:-1, 0]  = -2.0 * self.psi[1:-1, 1] / h**2               # Left
-        self.omega[1:-1, -1] = -2.0 * self.psi[1:-1, -2] / h**2              # Right
+        self.omega[-1, 1:-1] = -2.0 * self.psi[-2, 1:-1] / h**2 - 2.0 * self.u_lid[1:-1] / h # Top lid
+        self.omega[0, 1:-1]  = -2.0 * self.psi[1, 1:-1] / h**2                                # Bottom
+        self.omega[1:-1, 0]  = -2.0 * self.psi[1:-1, 1] / h**2                                # Left
+        self.omega[1:-1, -1] = -2.0 * self.psi[1:-1, -2] / h**2                               # Right
         
         # Corner averaging
         self.omega[0, 0]   = 0.5 * (self.omega[1, 0] + self.omega[0, 1])
@@ -99,7 +104,7 @@ class LidDrivenCavityFDM:
         self.u_c = self.u[1:-1, 1:-1]
         self.v_c = self.v[1:-1, 1:-1]
         
-        self.u[-1, :] = self.U
+        self.u[-1, :] = self.u_lid
         self.v[-1, :] = 0.0
         self.u[0, :] = 0.0
         self.v[0, :] = 0.0
@@ -176,23 +181,21 @@ class LidDrivenCavityFDM:
 
     def calculate_pressure(self, max_iter=5000, tol=1e-5):
         N, h = self.N, self.h
-        rhs = np.zeros((N, N))
-        for i in range(1, N-1):
-            for j in range(1, N-1):
-                dudx = (self.u[i, j+1] - self.u[i, j-1]) / (2.0 * h)
-                dudy = (self.u[i+1, j] - self.u[i-1, j]) / (2.0 * h)
-                dvdx = (self.v[i, j+1] - self.v[i, j-1]) / (2.0 * h)
-                dvdy = (self.v[i+1, j] - self.v[i-1, j]) / (2.0 * h)
-                rhs[i, j] = -(dudx**2 + 2.0 * dudy * dvdx + dvdy**2)
-                
+        dudx = (self.u[1:-1, 2:] - self.u[1:-1, :-2]) / (2.0 * h)
+        dudy = (self.u[2:, 1:-1] - self.u[:-2, 1:-1]) / (2.0 * h)
+        dvdx = (self.v[1:-1, 2:] - self.v[1:-1, :-2]) / (2.0 * h)
+        dvdy = (self.v[2:, 1:-1] - self.v[:-2, 1:-1]) / (2.0 * h)
+
+        rhs = -(dudx**2 + 2.0 * dudy * dvdx + dvdy**2)
+        
         p_new = self.p.copy()
         for _ in range(max_iter):
             p_old = p_new.copy()
             p_new[1:-1, 1:-1] = 0.25 * (
                 p_old[2:, 1:-1] + p_old[0:-2, 1:-1] +
-                p_old[1:-1, 2:] + p_old[1:-1, 0:-2] - h**2 * rhs[1:-1, 1:-1]
+                p_old[1:-1, 2:] + p_old[1:-1, 0:-2] - h**2 * rhs
             )
-            if np.max(np.abs(p_new - p_old)) < tol:
+            if np.max(np.abs(p_new[1:-1, 1:-1] - p_old[1:-1, 1:-1])) < tol:
                 break
         self.p = p_new - np.mean(p_new[1:-1, 1:-1])
 

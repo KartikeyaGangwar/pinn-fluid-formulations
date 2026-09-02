@@ -59,7 +59,7 @@ class HardBC_PsiP(nn.Module):
         psi_part = u_lid * (y**2) * (y - 1.0)
 
         psi = D * psi_net + psi_part
-        p   = p_net - torch.mean(p_net)
+        p   = p_net
 
         return psi, p
 
@@ -81,7 +81,7 @@ class HardBC_PsiOmega(nn.Module):
         psi_part = u_lid * (y**2) * (y - 1.0)
 
         psi = D * psi_net + psi_part
-        omega = omega_net - torch.mean(omega_net)
+        omega = omega_net
 
         return psi, omega
 

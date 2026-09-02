@@ -38,35 +38,37 @@ def grad(f, x):
     )[0]
 
 def sample_collocation_points(Nf=8000, device='cpu'):
-    # Uniform interior
-    x1 = torch.rand(Nf // 2, 1, device=device)
-    y1 = torch.rand(Nf // 2, 1, device=device)
+    # 50% interior
+    N_int = int(0.50 * Nf)
+    x_int = torch.rand(N_int, 1, device=device)
+    y_int = torch.rand(N_int, 1, device=device)
 
-    # Boundary-layer biased
-    x2 = torch.rand(Nf // 4, 1, device=device)
-    y2 = torch.rand(Nf // 4, 1, device=device)**3
+    # 37.5% boundary-layer biased (4 walls)
+    N_wall_each = int((0.375 * Nf) / 4)
+    x_b = torch.rand(N_wall_each, 1, device=device)
+    y_b = torch.rand(N_wall_each, 1, device=device)**3
 
-    x3 = torch.rand(Nf // 4, 1, device=device)
-    y3 = 1.0 - torch.rand(Nf // 4, 1, device=device)**3
+    x_t = torch.rand(N_wall_each, 1, device=device)
+    y_t = 1.0 - torch.rand(N_wall_each, 1, device=device)**3
 
-    x4 = torch.rand(Nf // 4, 1, device=device)**3
-    y4 = torch.rand(Nf // 4, 1, device=device)
+    x_l = torch.rand(N_wall_each, 1, device=device)**3
+    y_l = torch.rand(N_wall_each, 1, device=device)
 
-    x5 = 1.0 - torch.rand(Nf // 4, 1, device=device)**3
-    y5 = torch.rand(Nf // 4, 1, device=device)
+    x_r = 1.0 - torch.rand(N_wall_each, 1, device=device)**3
+    y_r = torch.rand(N_wall_each, 1, device=device)
 
-    # Corner biased
-    Nc = Nf // 8
-    xc = torch.rand(Nc, 1, device=device)**3
-    yc = torch.rand(Nc, 1, device=device)**3
+    # 12.5% corner biased (4 corners)
+    N_corner_each = (Nf - N_int - 4 * N_wall_each) // 4
+    xc = torch.rand(N_corner_each, 1, device=device)**3
+    yc = torch.rand(N_corner_each, 1, device=device)**3
 
     x_bl, y_bl = xc, yc
     x_tl, y_tl = xc, 1.0 - yc
     x_br, y_br = 1.0 - xc, yc
     x_tr, y_tr = 1.0 - xc, 1.0 - yc
 
-    x_f = torch.cat([x1, x2, x3, x4, x5, x_bl, x_tl, x_br, x_tr], dim=0).requires_grad_(True)
-    y_f = torch.cat([y1, y2, y3, y4, y5, y_bl, y_tl, y_br, y_tr], dim=0).requires_grad_(True)
+    x_f = torch.cat([x_int, x_b, x_t, x_l, x_r, x_bl, x_tl, x_br, x_tr], dim=0).requires_grad_(True)
+    y_f = torch.cat([y_int, y_b, y_t, y_l, y_r, y_bl, y_tl, y_br, y_tr], dim=0).requires_grad_(True)
     return x_f, y_f
 
 def load_ground_truth(gt_path, device):
@@ -122,12 +124,14 @@ def train(formulation='psi_p', Re=1000, epochs=8000, lr=1e-3, gt_path='gt_data_R
 
     gt = load_ground_truth(gt_path, device)
     x_f, y_f = sample_collocation_points(Nf=8000, device=device)
+    x_anchor = torch.tensor([[0.5]], dtype=torch.float32, device=device)
+    y_anchor = torch.tensor([[0.5]], dtype=torch.float32, device=device)
 
     # Initialize model
     if formulation == 'psi_p':
         base = BaseNet([2, 96, 96, 96, 2], activation='silu').to(device)
         model = HardBC_PsiP(base).to(device)
-    elif formulation in ['psi_omega_transport', 'psi_omega_coupled']:
+    elif formulation in ['psi_omega', 'psi_omega_coupled', 'psi_omega_transport']:
         base = BaseNet([2, 96, 96, 96, 2], activation='silu').to(device)
         model = HardBC_PsiOmega(base).to(device)
     elif formulation == 'uvp':
@@ -170,19 +174,10 @@ def train(formulation='psi_p', Re=1000, epochs=8000, lr=1e-3, gt_path='gt_data_R
             r_v = u * v_x + v * v_y + p_y - (1.0 / Re) * (v_xx + v_yy)
             loss_pde = torch.mean(r_u**2) + torch.mean(r_v**2)
 
-        elif formulation == 'psi_omega_transport':
-            psi, omega = model(x_f, y_f)
-            psi_x = grad(psi, x_f)
-            psi_y = grad(psi, y_f)
-            u = psi_y
-            v = -psi_x
-            omega_x, omega_y = grad(omega, x_f), grad(omega, y_f)
-            omega_xx, omega_yy = grad(omega_x, x_f), grad(omega_y, y_f)
+            _, p_anc = model(x_anchor, y_anchor)
+            loss_gauge = 1e-4 * (p_anc**2).squeeze()
 
-            r_omega = u * omega_x + v * omega_y - (1.0 / Re) * (omega_xx + omega_yy)
-            loss_pde = torch.mean(r_omega**2)
-
-        elif formulation == 'psi_omega_coupled':
+        elif formulation in ['psi_omega', 'psi_omega_coupled']:
             psi, omega = model(x_f, y_f)
             psi_x, psi_y = grad(psi, x_f), grad(psi, y_f)
             u = psi_y
@@ -194,6 +189,19 @@ def train(formulation='psi_p', Re=1000, epochs=8000, lr=1e-3, gt_path='gt_data_R
             r_psi = psi_xx + psi_yy + omega
             r_omega = u * omega_x + v * omega_y - (1.0 / Re) * (omega_xx + omega_yy)
             loss_pde = torch.mean(r_psi**2) + torch.mean(r_omega**2)
+            loss_gauge = torch.tensor(0.0, device=device)
+
+        elif formulation == 'psi_omega_transport':
+            psi, omega = model(x_f, y_f)
+            psi_x, psi_y = grad(psi, x_f), grad(psi, y_f)
+            u = psi_y
+            v = -psi_x
+            omega_x, omega_y = grad(omega, x_f), grad(omega, y_f)
+            omega_xx, omega_yy = grad(omega_x, x_f), grad(omega_y, y_f)
+
+            r_omega = u * omega_x + v * omega_y - (1.0 / Re) * (omega_xx + omega_yy)
+            loss_pde = torch.mean(r_omega**2)
+            loss_gauge = torch.tensor(0.0, device=device)
 
         elif formulation == 'uvp':
             u, v, p = model(x_f, y_f)
@@ -207,6 +215,7 @@ def train(formulation='psi_p', Re=1000, epochs=8000, lr=1e-3, gt_path='gt_data_R
             r_u = u * u_x + v * u_y + p_x - (1.0 / Re) * (u_xx + u_yy)
             r_v = u * v_x + v * v_y + p_y - (1.0 / Re) * (v_xx + v_yy)
             loss_pde = torch.mean(r_mass**2) + torch.mean(r_u**2) + torch.mean(r_v**2)
+            loss_gauge = torch.tensor(0.0, device=device)
 
         # ---------------- GT DATA LOSS ----------------
         N_gt = 3000
@@ -225,7 +234,7 @@ def train(formulation='psi_p', Re=1000, epochs=8000, lr=1e-3, gt_path='gt_data_R
         xg, yg = gt['x'][idx].clone().detach().requires_grad_(True), gt['y'][idx].clone().detach().requires_grad_(True)
         ug, vg = gt['u'][idx], gt['v'][idx]
 
-        if formulation in ['psi_p', 'psi_omega_transport', 'psi_omega_coupled']:
+        if formulation in ['psi_p', 'psi_omega', 'psi_omega_transport', 'psi_omega_coupled']:
             psi_p_out, aux_out = model(xg, yg)
             psi_x_p = grad(psi_p_out, xg)
             psi_y_p = grad(psi_p_out, yg)
@@ -247,7 +256,6 @@ def train(formulation='psi_p', Re=1000, epochs=8000, lr=1e-3, gt_path='gt_data_R
                 dv_dx_p = grad(v_p, xg)
                 loss_grad += torch.mean((dv_dx_p[mask_v] - gt['dv_dx'][idx][mask_v])**2)
 
-        loss_gauge = 5e-4 * torch.mean(aux_out**2)
         total_loss = lam_pde * loss_pde + lam_gt * loss_gt + 0.2 * loss_grad + loss_gauge
 
         total_loss.backward()

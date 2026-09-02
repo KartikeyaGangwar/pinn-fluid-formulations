@@ -37,6 +37,10 @@ venv.bak/
 *~
 .DS_Store
 
-# LaTeX / Paper directory (Private)
+# LaTeX / Paper directory & Private Reviews
 paper/
 paper/*
+technical review/
+"technical review/"
+*.aux
+*.log
