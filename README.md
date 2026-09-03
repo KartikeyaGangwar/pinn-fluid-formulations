@@ -99,11 +99,6 @@ pinn-fluid-formulations/
 │   ├── benchmark_data.py      # Ghia (1982) & Botella (1998) metric evaluations
 │   └── evaluate_and_plot.py   # Benchmark evaluation pipeline & figure generator
 │
-├── legacy_prototypes/         # Archival standalone scripts and prototypes
-│   ├── lid_driven_cavity_fdm.py
-│   ├── prototype_psi_p.py
-│   └── prototype_psi_omega.py
-│
 └── train_all.py               # Top-level batch training script
 ```
 

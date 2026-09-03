@@ -4,7 +4,7 @@ Numerical Scheme:
 - Streamfunction-Vorticity formulation
 - Alternating Direction Implicit (ADI) for vorticity transport
 - Red-Black Successive Over-Relaxation (SOR) for streamfunction Poisson equation
-- Thom's second-order boundary condition for wall vorticity closure
+- Thom's boundary condition formula for wall vorticity closure (first-order in wall vorticity O(h))
 - Jacobi relaxation for Pressure Poisson equation
 """
 
