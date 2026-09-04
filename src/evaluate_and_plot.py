@@ -268,6 +268,7 @@ def generate_figure3_topologies(fdm_sol, psi_p_sol, psi_w_sol, out_dir=None):
             ax_k.set_xlabel(r'$x$', fontsize=9)
 
     save_figure_safe(fig, 'fig3_flow_topologies_comparison', out_dir=out_dir, dpi=200)
+    save_figure_safe(fig, 'fig3_flow_topologies', out_dir=out_dir, dpi=200)
     plt.close(fig)
     print("Saved Figure 3: Flow Topologies")
 
@@ -530,6 +531,7 @@ def generate_figure7_datasparsity(out_dir=None):
 
     plt.tight_layout()
     save_figure_safe(fig, 'fig7_ablation_datasparsity', out_dir=out_dir, dpi=300)
+    save_figure_safe(fig, 'fig7_datasparsity_ablation', out_dir=out_dir, dpi=300)
     plt.close(fig)
     print("Saved Figure 7: Data Sparsity Ablation")
 
@@ -637,9 +639,28 @@ def export_structured_results(metrics_dict, u_c_fdm, v_c_fdm, u_c_p, v_c_p, u_c_
             return obj.tolist()
         return obj
 
+    json_export = {
+        'vortex_centers': {
+            'fdm': metrics_dict['v_fdm'],
+            'psi_p': metrics_dict['v_p'],
+            'psi_omega': metrics_dict['v_w']
+        },
+        'centerline_errors': {
+            'fdm': metrics_dict['met_fdm'],
+            'psi_p': metrics_dict['met_p'],
+            'psi_omega': metrics_dict['met_w']
+        },
+        'energetics': {
+            'fdm': metrics_dict['int_fdm'],
+            'psi_p': metrics_dict['int_p'],
+            'psi_omega': metrics_dict['int_w']
+        },
+        **metrics_dict
+    }
+
     json_path = os.path.join(out_dir, 'metrics_summary.json')
     with open(json_path, 'w', encoding='utf-8') as f:
-        json.dump(sanitize(metrics_dict), f, indent=4)
+        json.dump(sanitize(json_export), f, indent=4)
     print(f"[EXPORT] Saved {json_path}")
 
     # 2. CSV: Centerline Profiles

@@ -111,7 +111,11 @@ def evaluate_centerline_metrics(u_pred_center, v_pred_center, Re=1000):
     l2_v = compute_relative_l2_error(v_pred_center, ghia_v_ref)
     linf_u = compute_linf_error(u_pred_center, ghia_u_ref)
     linf_v = compute_linf_error(v_pred_center, ghia_v_ref)
+    u_mae = float(np.mean(np.abs(u_pred_center - ghia_u_ref)))
+    v_mae = float(np.mean(np.abs(v_pred_center - ghia_v_ref)))
     return {
+        'u_mae': u_mae,
+        'v_mae': v_mae,
         'l2_u_centerline': l2_u,
         'l2_v_centerline': l2_v,
         'linf_u_centerline': linf_u,
@@ -146,9 +150,9 @@ def find_vortex_centers(X, Y, psi):
         bl_x, bl_y, bl_psi = np.nan, np.nan, np.nan
         
     return {
-        'primary': {'x': primary_x, 'y': primary_y, 'psi': primary_psi},
-        'bot_right': {'x': br_x, 'y': br_y, 'psi': br_psi},
-        'bot_left': {'x': bl_x, 'y': bl_y, 'psi': bl_psi}
+        'primary': {'x': primary_x, 'y': primary_y, 'psi': primary_psi, 'psi_min': primary_psi},
+        'bot_right': {'x': br_x, 'y': br_y, 'psi': br_psi, 'psi_max': br_psi},
+        'bot_left': {'x': bl_x, 'y': bl_y, 'psi': bl_psi, 'psi_max': bl_psi}
     }
 
 def compute_integrated_quantities(X, Y, u, v, omega):
