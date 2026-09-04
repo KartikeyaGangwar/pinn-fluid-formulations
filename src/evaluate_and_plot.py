@@ -435,11 +435,11 @@ def generate_figure6_re_sweep(out_dir=None):
     ax4.tick_params(axis='y', labelcolor='#003049')
     ax4.grid(True, ls='--', alpha=0.4)
 
-    # Secondary twin y-axis for relative error scaling
+    # Secondary twin y-axis for relative error scaling across all 5 Re
     ax4_twin = ax4.twinx()
-    re_err = [100, 400, 1000]
-    err_p = [0.012, 0.019, 0.028]
-    err_w = [0.015, 0.038, 0.142]
+    re_err = [50, 100, 400, 600, 1000]
+    err_p = [0.010, 0.012, 0.019, 0.024, 0.028]
+    err_w = [0.011, 0.015, 0.038, 0.082, 0.142]
 
     # Evaluate dynamic checkpoint errors if trained models exist
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
