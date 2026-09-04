@@ -21,7 +21,8 @@ def train_psi_p(Re=1000, epochs=8000, lr=1e-3, device='cuda'):
     print(f"[*] TRAINING STREAMFUNCTION-PRESSURE (psi-p) PINN | Re={Re}", flush=True)
     print(f"=======================================================", flush=True)
 
-    gt = load_ground_truth('data/gt_data_Re1000.pkl', device)
+    gt_path = f'data/gt_data_Re{Re}.pkl' if os.path.exists(f'data/gt_data_Re{Re}.pkl') else 'data/gt_data_Re1000.pkl'
+    gt = load_ground_truth(gt_path, device)
     x_f, y_f = sample_collocation_points(Nf=8000, device=device)
     x_anchor = torch.tensor([[0.5]], dtype=torch.float32, device=device)
     y_anchor = torch.tensor([[0.5]], dtype=torch.float32, device=device)
@@ -129,7 +130,8 @@ def train_psi_omega(Re=1000, epochs=8000, lr=1e-3, device='cuda'):
     print(f"[*] TRAINING STREAMFUNCTION-VORTICITY (psi-omega) PINN | Re={Re}", flush=True)
     print(f"=======================================================", flush=True)
 
-    gt = load_ground_truth('data/gt_data_Re1000.pkl', device)
+    gt_path = f'data/gt_data_Re{Re}.pkl' if os.path.exists(f'data/gt_data_Re{Re}.pkl') else 'data/gt_data_Re1000.pkl'
+    gt = load_ground_truth(gt_path, device)
     x_f, y_f = sample_collocation_points(Nf=8000, device=device)
 
     base = BaseNet([2, 96, 96, 96, 2], activation='silu').to(device)
