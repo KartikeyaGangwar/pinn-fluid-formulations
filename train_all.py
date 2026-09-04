@@ -118,9 +118,12 @@ def train_psi_p(Re=1000, epochs=8000, lr=1e-3, device='cuda'):
     print(f"[SUCCESS] psi-p Training completed in {elapsed:.1f}s", flush=True)
     os.makedirs("checkpoints", exist_ok=True)
     torch.save(model.state_dict(), os.path.join("checkpoints", "psi_p_gt_pinn.pth"))
+    torch.save(model.state_dict(), os.path.join("checkpoints", f"psi_p_Re{Re}.pth"))
     with open(os.path.join("checkpoints", "history_psi_p.pkl"), "wb") as f:
         pickle.dump(history, f)
-    print(f"[SAVED] checkpoints/psi_p_gt_pinn.pth and checkpoints/history_psi_p.pkl", flush=True)
+    with open(os.path.join("checkpoints", f"history_psi_p_Re{Re}.pkl"), "wb") as f:
+        pickle.dump(history, f)
+    print(f"[SAVED] checkpoints/psi_p_gt_pinn.pth, psi_p_Re{Re}.pth and histories", flush=True)
     return model, history
 
 
@@ -225,9 +228,12 @@ def train_psi_omega(Re=1000, epochs=8000, lr=1e-3, device='cuda'):
     print(f"[SUCCESS] psi-omega Training completed in {elapsed:.1f}s", flush=True)
     os.makedirs("checkpoints", exist_ok=True)
     torch.save(model.state_dict(), os.path.join("checkpoints", "psi_omega_gt_pinn.pth"))
+    torch.save(model.state_dict(), os.path.join("checkpoints", f"psi_omega_Re{Re}.pth"))
     with open(os.path.join("checkpoints", "history_psi_omega.pkl"), "wb") as f:
         pickle.dump(history, f)
-    print(f"[SAVED] checkpoints/psi_omega_gt_pinn.pth and checkpoints/history_psi_omega.pkl", flush=True)
+    with open(os.path.join("checkpoints", f"history_psi_omega_Re{Re}.pkl"), "wb") as f:
+        pickle.dump(history, f)
+    print(f"[SAVED] checkpoints/psi_omega_gt_pinn.pth, psi_omega_Re{Re}.pth and histories", flush=True)
     return model, history
 
 
