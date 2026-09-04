@@ -349,42 +349,113 @@ def generate_figure5_vorticity_profiles(fdm_sol, psi_p_sol, psi_w_sol, out_dir=N
     print("Saved Figure 5: Vorticity and Boundary-Layer Profiles")
 
 def generate_figure6_re_sweep(out_dir=None):
-    fig, axs = plt.subplots(1, 2, figsize=(14, 5.5))
-    re_vals = [100, 400, 1000, 3200]
+    """
+    Generate 4-panel publication figure showcasing multi-Reynolds flow evolution:
+    (a) Vertical centerline velocity u(0.5, y) vs Re
+    (b) Horizontal centerline velocity v(x, 0.5) vs Re
+    (c) Primary vortex core migration trajectory in the cavity
+    (d) Streamfunction minimum intensity and PINN formulation error scaling
+    """
+    res = [50, 100, 400, 600, 1000]
+    colors = ['#2b5c8f', '#2a9d8f', '#e76f51', '#d62828', '#003049']
+    linestyles = ['-', '--', '-.', ':', '-']
 
-    # Relative L2 velocity errors across Re
-    l2_psi_p = [0.012, 0.019, 0.028, 0.054]
-    l2_psi_w = [0.015, 0.038, 0.142, 0.380]
+    fig, axs = plt.subplots(2, 2, figsize=(14, 10))
 
-    ax1 = axs[0]
-    ax1.plot(re_vals, l2_psi_p, 'bo-', lw=2.2, ms=7, label=r'$\psi\text{--}p$ Formulation')
-    ax1.plot(re_vals, l2_psi_w, 'rs--', lw=2.2, ms=7, label=r'$\psi\text{--}\omega$ Formulation')
-    ax1.set_xscale('log')
-    ax1.set_yscale('log')
-    ax1.set_xlabel(r'Reynolds Number $\mathrm{Re}$', fontsize=12)
-    ax1.set_ylabel(r'Relative Velocity $L_2$ Error', fontsize=12)
-    ax1.set_title(r'Error Scaling vs Reynolds Number', fontsize=12)
-    ax1.grid(True, ls='--', alpha=0.4, which='both')
-    ax1.legend(frameon=True, fontsize=10)
+    vortex_x = []
+    vortex_y = []
+    psi_mins = []
 
-    # Primary vortex center position deviation
-    dist_psi_p = [0.002, 0.005, 0.008, 0.018]
-    dist_psi_w = [0.003, 0.014, 0.075, 0.160]
+    ax1 = axs[0, 0]
+    ax2 = axs[0, 1]
 
-    ax2 = axs[1]
-    ax2.plot(re_vals, dist_psi_p, 'bo-', lw=2.2, ms=7, label=r'$\psi\text{--}p$ Formulation')
-    ax2.plot(re_vals, dist_psi_w, 'rs--', lw=2.2, ms=7, label=r'$\psi\text{--}\omega$ Formulation')
-    ax2.set_xscale('log')
-    ax2.set_xlabel(r'Reynolds Number $\mathrm{Re}$', fontsize=12)
-    ax2.set_ylabel(r'Vortex Center Distance $\| \mathbf{x}_c - \mathbf{x}_c^{\mathrm{ref}} \|_2$', fontsize=12)
-    ax2.set_title(r'Vortex Core Topology Deviation', fontsize=12)
-    ax2.grid(True, ls='--', alpha=0.4, which='both')
-    ax2.legend(frameon=True, fontsize=10)
+    for idx, r in enumerate(res):
+        fn = f'data/gt_data_Re{r}.pkl'
+        if not os.path.exists(fn):
+            continue
+        with open(fn, 'rb') as f:
+            d = pickle.load(f)
+        x = d['coordinates']['x']
+        y = d['coordinates']['y']
+        u = d['fields']['u']
+        v = d['fields']['v']
+        psi = d['fields']['psi']
+        vc = d['vortex_center']
 
+        mid_x = np.argmin(np.abs(x - 0.5))
+        mid_y = np.argmin(np.abs(y - 0.5))
+
+        u_c = u[:, mid_x]
+        v_c = v[mid_y, :]
+
+        vortex_x.append(vc['x'])
+        vortex_y.append(vc['y'])
+        psi_mins.append(float(psi.min()))
+
+        lbl = rf'$\mathrm{{Re}} = {r}$'
+        ax1.plot(u_c, y, color=colors[idx], ls=linestyles[idx], lw=2.0, label=lbl)
+        ax2.plot(x, v_c, color=colors[idx], ls=linestyles[idx], lw=2.0, label=lbl)
+
+    ax1.set_xlabel(r'Horizontal Velocity $u(0.5, y)$', fontweight='bold', fontsize=11)
+    ax1.set_ylabel(r'Vertical Coordinate $y$', fontweight='bold', fontsize=11)
+    ax1.set_title(r'(a) Vertical Centerline Velocity $u(0.5, y)$ vs $\mathrm{Re}$', fontweight='bold', fontsize=12)
+    ax1.grid(True, ls='--', alpha=0.4)
+    ax1.legend(loc='lower right', frameon=True, framealpha=0.9, fontsize=9.5)
+
+    ax2.set_xlabel(r'Horizontal Coordinate $x$', fontweight='bold', fontsize=11)
+    ax2.set_ylabel(r'Vertical Velocity $v(x, 0.5)$', fontweight='bold', fontsize=11)
+    ax2.set_title(r'(b) Horizontal Centerline Velocity $v(x, 0.5)$ vs $\mathrm{Re}$', fontweight='bold', fontsize=12)
+    ax2.grid(True, ls='--', alpha=0.4)
+    ax2.legend(loc='upper right', frameon=True, framealpha=0.9, fontsize=9.5)
+
+    # Panel (c): Vortex Center Trajectory in Cavity
+    ax3 = axs[1, 0]
+    ax3.plot(vortex_x, vortex_y, 'k--', lw=1.5, zorder=2)
+    offsets = [(8, 4), (8, 4), (-48, 8), (8, -12), (8, 4)]
+    for idx, r in enumerate(res):
+        if idx >= len(vortex_x):
+            break
+        ax3.scatter(vortex_x[idx], vortex_y[idx], color=colors[idx], s=90, zorder=3, label=rf'$\mathrm{{Re}}={r}$')
+        ax3.annotate(f'Re={r}', (vortex_x[idx], vortex_y[idx]),
+                     textcoords="offset points", xytext=offsets[idx], fontsize=9, fontweight='bold', color=colors[idx])
+
+    ax3.set_xlim(0.50, 0.72)
+    ax3.set_ylim(0.55, 0.82)
+    ax3.set_xlabel(r'Vortex Center $x_c$', fontweight='bold', fontsize=11)
+    ax3.set_ylabel(r'Vortex Center $y_c$', fontweight='bold', fontsize=11)
+    ax3.set_title(r'(c) Primary Vortex Core Migration Trajectory', fontweight='bold', fontsize=12)
+    ax3.grid(True, ls='--', alpha=0.4)
+    ax3.legend(loc='upper left', frameon=True, framealpha=0.9, fontsize=9.5)
+
+    # Panel (d): Minimum Streamfunction vs Re & Formulation Error Scaling
+    ax4 = axs[1, 1]
+    ax4.plot(res[:len(psi_mins)], psi_mins, 'o-', color='#003049', lw=2.2, ms=6, label=r'Reference FDM $\psi_{\min}$')
+    ax4.set_xlabel(r'Reynolds Number $\mathrm{Re}$', fontweight='bold', fontsize=11)
+    ax4.set_ylabel(r'Minimum Streamfunction $\psi_{\min}$', fontweight='bold', color='#003049', fontsize=11)
+    ax4.tick_params(axis='y', labelcolor='#003049')
+    ax4.grid(True, ls='--', alpha=0.4)
+
+    # Secondary twin y-axis for relative error scaling
+    ax4_twin = ax4.twinx()
+    re_err = [100, 400, 1000]
+    err_p = [0.012, 0.019, 0.028]
+    err_w = [0.015, 0.038, 0.142]
+    ax4_twin.plot(re_err, err_p, 's--', color='#2a9d8f', lw=2.0, ms=6, label=r'$\psi\text{--}p$ Error $\epsilon_{L_2}$')
+    ax4_twin.plot(re_err, err_w, '^-.', color='#d62828', lw=2.0, ms=6, label=r'$\psi\text{--}\omega$ Error $\epsilon_{L_2}$')
+    ax4_twin.set_ylabel(r'Relative $L_2$ Velocity Error', fontweight='bold', color='#d62828', fontsize=11)
+    ax4_twin.tick_params(axis='y', labelcolor='#d62828')
+
+    lines1, labels1 = ax4.get_legend_handles_labels()
+    lines2, labels2 = ax4_twin.get_legend_handles_labels()
+    ax4.legend(lines1 + lines2, labels1 + labels2, loc='center right', frameon=True, framealpha=0.9, fontsize=9.5)
+    ax4.set_title(r'(d) Core Intensity and Formulation Error Scaling', fontweight='bold', fontsize=12)
+
+    plt.suptitle(r'Reynolds Number Sensitivity and Flow Topology Evolution ($\mathrm{Re} \in [50, 1000]$)',
+                 fontsize=14, fontweight='bold', y=0.99)
     plt.tight_layout()
     save_figure_safe(fig, 'fig6_reynolds_sweep', out_dir=out_dir, dpi=300)
     plt.close(fig)
-    print("Saved Figure 6: Reynolds Sweep")
+    print("Saved Figure 6: Comprehensive Reynolds Sweep across Re in [50, 100, 400, 600, 1000]")
 
 def generate_figure7_datasparsity(out_dir=None):
     fig, ax = plt.subplots(figsize=(8, 5.5))
