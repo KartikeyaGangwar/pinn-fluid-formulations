@@ -51,38 +51,54 @@ plt.rcParams.update({
 def get_device():
     return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-def evaluate_model_on_grid(model, formulation='psi_p', N_vis=300, device='cpu'):
+def evaluate_model_on_grid(model, formulation='psi_p', N_vis=300, device='cpu', chunk_size=15000):
     model.eval()
     x = np.linspace(0, 1, N_vis)
     y = np.linspace(0, 1, N_vis)
     X, Y = np.meshgrid(x, y, indexing='xy')
 
-    x_t = torch.tensor(X.flatten()[:, None], dtype=torch.float32, device=device).requires_grad_(True)
-    y_t = torch.tensor(Y.flatten()[:, None], dtype=torch.float32, device=device).requires_grad_(True)
+    x_flat = X.flatten()[:, None]
+    y_flat = Y.flatten()[:, None]
+    n_pts = len(x_flat)
 
-    if formulation in ['psi_p', 'psi_omega_transport', 'psi_omega_coupled']:
-        psi_pred, aux_pred = model(x_t, y_t)
-        psi_x = torch.autograd.grad(psi_pred, x_t, torch.ones_like(psi_pred), create_graph=True, retain_graph=True)[0]
-        psi_y = torch.autograd.grad(psi_pred, y_t, torch.ones_like(psi_pred), create_graph=True, retain_graph=True)[0]
-        psi_xx = torch.autograd.grad(psi_x, x_t, torch.ones_like(psi_x), create_graph=True, retain_graph=True)[0]
-        psi_yy = torch.autograd.grad(psi_y, y_t, torch.ones_like(psi_y), create_graph=False, retain_graph=False)[0]
+    psi_list, u_list, v_list, omega_list, p_list = [], [], [], [], []
 
-        u_arr = psi_y.detach().cpu().numpy().reshape(N_vis, N_vis)
-        v_arr = -psi_x.detach().cpu().numpy().reshape(N_vis, N_vis)
-        psi_arr = psi_pred.detach().cpu().numpy().reshape(N_vis, N_vis)
-        omega_arr = -(psi_xx + psi_yy).detach().cpu().numpy().reshape(N_vis, N_vis)
-        p_arr = aux_pred.detach().cpu().numpy().reshape(N_vis, N_vis) if formulation == 'psi_p' else np.zeros_like(psi_arr)
-    else:
-        u_pred, v_pred, p_pred = model(x_t, y_t)
-        u_arr = u_pred.detach().cpu().numpy().reshape(N_vis, N_vis)
-        v_arr = v_pred.detach().cpu().numpy().reshape(N_vis, N_vis)
-        p_arr = p_pred.detach().cpu().numpy().reshape(N_vis, N_vis)
-        # Numerical curl for vorticity
+    for i in range(0, n_pts, chunk_size):
+        end_idx = min(i + chunk_size, n_pts)
+        x_c = torch.tensor(x_flat[i:end_idx], dtype=torch.float32, device=device).requires_grad_(True)
+        y_c = torch.tensor(y_flat[i:end_idx], dtype=torch.float32, device=device).requires_grad_(True)
+
+        if formulation in ['psi_p', 'psi_omega', 'psi_omega_transport', 'psi_omega_coupled']:
+            psi_pred, aux_pred = model(x_c, y_c)
+            psi_x = torch.autograd.grad(psi_pred, x_c, torch.ones_like(psi_pred), create_graph=True, retain_graph=True)[0]
+            psi_y = torch.autograd.grad(psi_pred, y_c, torch.ones_like(psi_pred), create_graph=True, retain_graph=True)[0]
+            psi_xx = torch.autograd.grad(psi_x, x_c, torch.ones_like(psi_x), create_graph=False, retain_graph=True)[0]
+            psi_yy = torch.autograd.grad(psi_y, y_c, torch.ones_like(psi_y), create_graph=False, retain_graph=False)[0]
+
+            u_list.append(psi_y.detach().cpu().numpy())
+            v_list.append(-psi_x.detach().cpu().numpy())
+            psi_list.append(psi_pred.detach().cpu().numpy())
+            omega_list.append(-(psi_xx + psi_yy).detach().cpu().numpy())
+            p_list.append(aux_pred.detach().cpu().numpy() if formulation == 'psi_p' else np.zeros((end_idx - i, 1)))
+        else:
+            u_pred, v_pred, p_pred = model(x_c, y_c)
+            u_list.append(u_pred.detach().cpu().numpy())
+            v_list.append(v_pred.detach().cpu().numpy())
+            p_list.append(p_pred.detach().cpu().numpy())
+            psi_list.append(np.zeros((end_idx - i, 1)))
+            omega_list.append(np.zeros((end_idx - i, 1)))
+
+    u_arr = np.vstack(u_list).reshape(N_vis, N_vis)
+    v_arr = np.vstack(v_list).reshape(N_vis, N_vis)
+    psi_arr = np.vstack(psi_list).reshape(N_vis, N_vis)
+    omega_arr = np.vstack(omega_list).reshape(N_vis, N_vis)
+    p_arr = np.vstack(p_list).reshape(N_vis, N_vis)
+
+    if formulation == 'uvp':
         dy, dx = y[1] - y[0], x[1] - x[0]
         dv_dx = np.gradient(v_arr, dx, axis=1)
         du_dy = np.gradient(u_arr, dy, axis=0)
         omega_arr = dv_dx - du_dy
-        psi_arr = np.zeros_like(u_arr)
 
     return {
         'x': x, 'y': y, 'X': X, 'Y': Y,

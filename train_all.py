@@ -103,7 +103,8 @@ def train_psi_p(Re=1000, epochs=8000, lr=1e-3, device='cuda'):
         if epoch >= 4000:
             scheduler.step()
 
-        if epoch % 500 == 0 or epoch == epochs - 1:
+        log_interval = 100 if epochs >= 1000 else max(1, epochs // 10)
+        if epoch % log_interval == 0 or epoch == epochs - 1:
             grad_norm = sum(p.grad.norm().item()**2 for p in model.parameters() if p.grad is not None)**0.5
             history['epoch'].append(epoch)
             history['loss_total'].append(total_loss.item())
@@ -208,7 +209,8 @@ def train_psi_omega(Re=1000, epochs=8000, lr=1e-3, device='cuda'):
         if epoch >= 4000:
             scheduler.step()
 
-        if epoch % 500 == 0 or epoch == epochs - 1:
+        log_interval = 100 if epochs >= 1000 else max(1, epochs // 10)
+        if epoch % log_interval == 0 or epoch == epochs - 1:
             grad_norm = sum(p.grad.norm().item()**2 for p in model.parameters() if p.grad is not None)**0.5
             history['epoch'].append(epoch)
             history['loss_total'].append(total_loss.item())
@@ -228,10 +230,17 @@ def train_psi_omega(Re=1000, epochs=8000, lr=1e-3, device='cuda'):
 
 
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description="Unified batch trainer for fluid PINN formulations.")
+    parser.add_argument('--epochs', type=int, default=8000, help="Number of training epochs (default: 8000)")
+    parser.add_argument('--lr', type=float, default=1e-3, help="Initial learning rate (default: 1e-3)")
+    parser.add_argument('--re', type=int, default=1000, help="Reynolds number (default: 1000)")
+    args = parser.parse_args()
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f"Executing Complete PINN Training Suite on {device}...")
-    train_psi_p(Re=1000, epochs=8000, lr=1e-3, device=device)
-    train_psi_omega(Re=1000, epochs=8000, lr=1e-3, device=device)
+    print(f"Executing PINN Training Suite on {device} for {args.epochs} epochs (Re={args.re})...")
+    train_psi_p(Re=args.re, epochs=args.epochs, lr=args.lr, device=device)
+    train_psi_omega(Re=args.re, epochs=args.epochs, lr=args.lr, device=device)
     print("\n=======================================================")
     print("[ALL TRAININGS COMPLETE] Both models trained & saved!")
     print("=======================================================\n")
