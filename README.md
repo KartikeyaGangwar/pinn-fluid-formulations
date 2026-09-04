@@ -32,23 +32,23 @@ This repository presents a controlled, formulation-level investigation of 2D ste
 | :--- | :---: | :---: | :---: | :---: |
 | **Ghia et al. (1982)** | $(0.5313, 0.5625)$ | -0.1179 | $(0.8594, 0.1094)$ | 1.750 |
 | **Botella & Peyret (1998)** | $(0.5312, 0.5653)$ | -0.1189 | $(0.8641, 0.1118)$ | 1.729 |
-| **Reference FDM ($251\times 251$)** | $(0.5360, 0.5720)$ | -0.1067 | $(0.8560, 0.1160)$ | 1.766 |
-| **$\psi-p$ PINN (Proposed)** | **(0.5418, 0.5819)** | **-0.1042** | **(0.8863, 0.1672)** | **2.499** |
-| **$\psi-\omega$ PINN (Coupled)** | $(0.5318, 0.6087)$ | -0.1074 | $(0.8896, 0.1304)$ | 0.872 |
+| **Reference FDM ($251\times 251$)** | $(0.5440, 0.5760)$ | -0.0873 | $(0.8720, 0.1160)$ | 0.986 |
+| **$\psi-p$ PINN (Proposed)** | **(0.5418, 0.5819)** | **-0.0864** | **(0.8863, 0.1639)** | **2.216** |
+| **$\psi-\omega$ PINN (Coupled)** | $(0.5452, 0.5953)$ | -0.0873 | $(0.8796, 0.1304)$ | 0.845 |
 
 ### 2. Quantitative Centerline Velocity Error Norms (Relative to Ghia et al. 1982)
 | Formulation | $\epsilon_{L_2}(u)$ [%] | $\epsilon_{L_\infty}(u)$ | $\epsilon_{L_2}(v)$ [%] | $\epsilon_{L_\infty}(v)$ |
 | :--- | :---: | :---: | :---: | :---: |
-| **Reference FDM ($N=251$)** | 10.42 | 0.070 | 10.41 | 0.050 |
-| **$\psi-p$ PINN (Proposed)** | 9.87 | 0.077 | 13.19 | 0.062 |
-| **$\psi-\omega$ PINN (Coupled)** | 11.02 | 0.077 | 12.04 | 0.058 |
+| **Reference FDM ($N=251$)** | 24.78 | 0.173 | 30.04 | 0.144 |
+| **$\psi-p$ PINN (Proposed)** | 21.89 | 0.131 | 31.53 | 0.149 |
+| **$\psi-\omega$ PINN (Coupled)** | 20.65 | 0.123 | 31.20 | 0.147 |
 
 ### 3. Integrated Global Flow Quantities
 | Model / Formulation | Kinetic Energy $E_k$ | Global Enstrophy $\mathcal{E}$ | Status |
 | :--- | :---: | :---: | :--- |
-| **Reference FDM ($N=251$)** | 0.0374 | **29.57** | Reference Baseline |
-| **$\psi-p$ PINN (Proposed)** | 0.0333 | **4.72** | Physically Consistent & Sharp Shearing |
-| **$\psi-\omega$ PINN (Coupled)** | 0.0352 | **4.29** | Diffused Wall Vorticity |
+| **Reference FDM ($N=251$)** | 0.0231 | **5.38** | Reference Baseline |
+| **$\psi-p$ PINN (Proposed)** | 0.0231 | **4.18** | Physically Consistent & Sharp Shearing |
+| **$\psi-\omega$ PINN (Coupled)** | 0.0236 | **4.54** | Diffused Wall Vorticity |
 
 ---
 
