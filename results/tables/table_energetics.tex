@@ -3,13 +3,14 @@
 \caption{Integrated Global Flow Quantities: Kinetic Energy $E_k$ and Enstrophy $\mathcal{E}$ at $\mathrm{Re} = 1000$.}
 \label{tab:energetics}
 \small
+\setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{lccc}
 \toprule
-\textbf{Model / Benchmark} & \textbf{Kinetic Energy} $E_k$ & \textbf{Global Enstrophy} $\mathcal{E}$ & \textbf{Topology Status} \\
+\textbf{Model / Benchmark} & \textbf{Kinetic Energy} $E_k$ & \textbf{Global Enstrophy} $\mathcal{E}$ & \textbf{Secondary Eddy Bias} \\
 \midrule
-Reference FDM ($N=251$) & 0.0231 & 5.38 & Exact Benchmark \\
-$\psi\text{--}p$ PINN (Proposed) & 0.0231 & 4.18 & Physically Consistent \\
-$\psi\text{--}\omega$ PINN (Coupled) & 0.0236 & 4.54 & Diffused Wall Vorticity \\
+Reference FDM ($N=251$) & 0.0231 & 5.38 & Numerical Reference \\
+$\psi\text{--}p$ PINN (Proposed) & 0.0231 & 4.18 & $+124.8\%$ (Over-predicted) \\
+$\psi\text{--}\omega$ PINN (Coupled) & 0.0236 & 4.54 & $-14.3\%$ (Under-predicted) \\
 \bottomrule
 \end{tabular}
 \end{table}

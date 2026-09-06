@@ -1,4 +1,4 @@
-# Formulation-Induced Failure Modes in Physics-Informed Neural Networks for High-Reynolds-Number Flows
+# Operator Conditioning and False Convergence in Physics-Informed Neural Networks for Incompressible Flows
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.0+](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
@@ -6,7 +6,9 @@
 [![Paper](https://img.shields.io/badge/Paper-Under_Review-orange.svg)](#citation)
 
 Official PyTorch implementation and benchmark suite for the research paper:  
-**"Formulation-Induced Failure Modes in Physics-Informed Neural Networks for High-Reynolds-Number Incompressible Flows: Operator Conditioning and False Convergence"**.
+**"Operator Conditioning and False Convergence in Physics-Informed Neural Networks for Incompressible Flows"**.
+
+> **Note on Public Availability:** This repository is actively maintained and will be made fully open-source and publicly accessible under the MIT License upon formal peer-reviewed publication of the manuscript.
 
 ---
 
@@ -20,8 +22,8 @@ This repository presents a controlled, formulation-level investigation of 2D ste
 
 ### Key Scientific Findings
 * **Continuous Equivalence != Optimization Equivalence:** While $\psi-p$ and $\psi-\omega$ are mathematically identical in continuous fluid mechanics, their neural loss landscapes diverge sharply.
-* **The False Convergence & Operator Diffusion in $\psi-\omega$:** $\psi-\omega$ PINNs achieve low residual loss $\mathcal{L}_{\mathrm{pde}} \sim 10^{-4}$ and match 1D centerline velocities due to kinematic data supervision ($u=\psi_y, v=-\psi_x$). However, because continuous mesh-free PINNs lack discrete spatial stencils to evaluate **Thom's wall-vorticity formula** ($\omega_w = -2\psi_1/h^2 - 2U/h$), the coupled optimizer suffers from operator stiffness near solid walls, suppressing secondary corner eddy intensity by over $50\%$ ($\psi_{\max} = 0.872 \times 10^{-3}$ vs $1.766 \times 10^{-3}$ in FDM).
-* **Continuous Hodge Projection in $\psi-p$:** Retaining Pressure ($p$) acts as an elliptic Lagrange multiplier (Helmholtz-Hodge projection) that stabilizes convective momentum transport, accurately capturing primary and secondary vortex cores and near-wall shear without auxiliary boundary approximations.
+* **False Convergence & Boundary Diffusion in $\psi-\omega$:** $\psi-\omega$ PINNs achieve low PDE residual loss ($\sim 7.4 \times 10^{-2}$) and match 1D centerline velocities ($\text{MAE} \le 0.018$) due to kinematic data supervision ($u=\psi_y, v=-\psi_x$). However, because the auxiliary vorticity head $\omega_{\mathrm{head}}$ lacks explicit boundary consistency constraints at solid walls, the coupled optimizer diffuses near-wall vorticity to minimize interior residuals, underpredicting secondary corner eddy intensity by $14.3\%$ ($\psi_{\max} = 0.845 \times 10^{-3}$ vs $0.986 \times 10^{-3}$ in reference FDM).
+* **Coupled Momentum in $\psi-p$:** Retaining kinematic pressure ($p$) balances convective accelerations across the interior, capturing sharp near-wall shear and primary vortex location $(0.5418, 0.5819)$, though unconstrained pressure gradients over-predict secondary eddy intensity ($\psi_{\max} = 2.216 \times 10^{-3}$, $+124.8\%$ vs FDM).
 
 ---
 
@@ -36,19 +38,22 @@ This repository presents a controlled, formulation-level investigation of 2D ste
 | **$\psi-p$ PINN (Proposed)** | **(0.5418, 0.5819)** | **-0.0864** | **(0.8863, 0.1639)** | **2.216** |
 | **$\psi-\omega$ PINN (Coupled)** | $(0.5452, 0.5953)$ | -0.0873 | $(0.8796, 0.1304)$ | 0.845 |
 
-### 2. Quantitative Centerline Velocity Error Norms (Relative to Ghia et al. 1982)
+### 2. Quantitative Centerline Velocity Error Norms (Relative to Reference FDM Ground Truth)
 | Formulation | $\epsilon_{L_2}(u)$ [%] | $\epsilon_{L_\infty}(u)$ | $\epsilon_{L_2}(v)$ [%] | $\epsilon_{L_\infty}(v)$ |
 | :--- | :---: | :---: | :---: | :---: |
-| **Reference FDM ($N=251$)** | 24.78 | 0.173 | 30.04 | 0.144 |
-| **$\psi-p$ PINN (Proposed)** | 21.89 | 0.131 | 31.53 | 0.149 |
-| **$\psi-\omega$ PINN (Coupled)** | 20.65 | 0.123 | 31.20 | 0.147 |
+| **$\psi-p$ PINN (Proposed)** | **6.64** | **0.056** | **2.09** | **0.014** |
+| **$\psi-\omega$ PINN (Coupled)** | 8.81 | 0.057 | 1.56 | 0.010 |
+| *Benchmark Context: Reference FDM vs. Uniform Lid (Ghia et al. 1982)\** | *24.78* | *0.173* | *30.04* | *0.144* |
+
+*\*The structural offset between the regularized reference FDM solver and Ghia et al. (1982) is a direct consequence of differing boundary conditions: the regularized polynomial lid $u(x,1)=16x^2(1-x)^2$ has $46.7\%$ lower integrated tangential speed ($\int_0^1 16x^2(1-x)^2\,dx = 8/15 \approx 0.533$) than the uniform lid ($\int_0^1 1\,dx = 1.0$, which exhibits $87.5\%$ higher integrated speed than the polynomial profile).*
 
 ### 3. Integrated Global Flow Quantities
-| Model / Formulation | Kinetic Energy $E_k$ | Global Enstrophy $\mathcal{E}$ | Status |
+| Model / Formulation | Kinetic Energy $E_k$ | Global Enstrophy $\mathcal{E}$ | Secondary Eddy Bias |
 | :--- | :---: | :---: | :--- |
-| **Reference FDM ($N=251$)** | 0.0231 | **5.38** | Reference Baseline |
-| **$\psi-p$ PINN (Proposed)** | 0.0231 | **4.18** | Physically Consistent & Sharp Shearing |
-| **$\psi-\omega$ PINN (Coupled)** | 0.0236 | **4.54** | Diffused Wall Vorticity |
+| **Reference FDM ($N=251$)** | 0.0231 | **5.38** | Numerical Reference ([Singh 2026](https://github.com/KartikeyaGangwar/lid-driven-cavity-cfd)) |
+| **$\psi-p$ PINN (Proposed)** | 0.0231 | **4.18** | $+124.8\%$ (Over-predicted) |
+| **$\psi-\omega$ PINN (Coupled)** | 0.0236 | **4.54** | $-14.3\%$ (Under-predicted) |
+
 
 ---
 
@@ -140,17 +145,27 @@ python -c "from src.train_pinn import train; train(formulation='psi_p', Re=1000,
 
 ## Citation
 
-If you find this codebase or research useful, please cite our paper:
+If you find this codebase or research useful, please cite our paper and the reference CFD solver:
 
 ```bibtex
-@article{singh2026formulation,
-  title={Formulation-Induced Failure Modes in Physics-Informed Neural Networks for High-Reynolds-Number Incompressible Flows: Operator Conditioning and False Convergence},
+@article{singh2026operator,
+  title={Operator Conditioning and False Convergence in Physics-Informed Neural Networks for Incompressible Flows},
   author={Singh, Kartikey},
   journal={Journal of Computational Physics},
   year={2026},
   note={Under Review}
 }
+
+
+@misc{singh2026cavityfdm,
+  author       = {Singh, Kartikey},
+  title        = {A Reference Finite-Difference Solver for the {2D} Lid-Driven Cavity Flow},
+  year         = {2026},
+  howpublished = {\url{https://github.com/KartikeyaGangwar/lid-driven-cavity-cfd}},
+  note         = {Zenodo, \doi{10.5281/zenodo.18312938}}
+}
 ```
+
 
 ---
 

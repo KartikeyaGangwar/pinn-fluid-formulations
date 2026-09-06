@@ -1,15 +1,22 @@
 \begin{table}[htbp]
 \centering
-\caption{Quantitative Velocity Error Norms Relative to Ghia et al. (1982) Centerline Benchmarks at $\mathrm{Re} = 1000$.}
+\caption{Quantitative Centerline Velocity Errors Relative to Reference FDM ($251 \times 251$, Regularized Lid) at $\mathrm{Re} = 1000$.}
 \label{tab:velocity_errors}
 \small
 \begin{tabular}{lcccc}
 \toprule
 \textbf{Formulation} & $\epsilon_{L_2}(u)$ [\%] & $\epsilon_{L_\infty}(u)$ & $\epsilon_{L_2}(v)$ [\%] & $\epsilon_{L_\infty}(v)$ \\
 \midrule
-Reference FDM ($N=251$) & 24.78 & 0.173 & 30.04 & 0.144 \\
-$\psi\text{--}p$ PINN (Proposed) & 21.89 & 0.131 & 31.53 & 0.149 \\
-$\psi\text{--}\omega$ PINN (Coupled) & 20.65 & 0.123 & 31.20 & 0.147 \\
+$\psi\text{--}p$ PINN (Proposed) & 6.64 & 0.056 & 2.09 & 0.014 \\
+$\psi\text{--}\omega$ PINN (Coupled) & 8.81 & 0.057 & 1.56 & 0.010 \\
+\midrule
+\multicolumn{5}{l}{\textit{Benchmark Context: Regularized FDM vs. Uniform Lid (Ghia et al. \cite{ghia1982high})}} \\
+Reference FDM vs. Ghia* & 24.78 & 0.173 & 30.04 & 0.144 \\
 \bottomrule
 \end{tabular}
+\vspace{1ex}
+\begin{flushleft}
+\footnotesize
+*The structural deviation between the regularized reference FDM solver and Ghia et al. \cite{ghia1982high} is a consequence of differing boundary conditions: the continuous regularized lid $u(x,1)=16x^2(1-x)^2$ has $46.7\%$ lower integrated tangential speed ($\int_0^1 16x^2(1-x)^2\,dx = 8/15 \approx 0.533$) than the uniform lid ($\int_0^1 1\,dx = 1.0$), while the uniform lid exhibits $87.5\%$ higher integrated speed than the polynomial profile.
+\end{flushleft}
 \end{table}
