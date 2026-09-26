@@ -151,7 +151,7 @@ If you find this codebase or research useful, please cite our paper and the refe
 @article{singh2026operator,
   title={Operator Conditioning and False Convergence in Physics-Informed Neural Networks for Incompressible Flows},
   author={Singh, Kartikey},
-  journal={Journal of Computational Physics},
+  journal={Physics of Fluids},
   year={2026},
   note={Under Review}
 }
