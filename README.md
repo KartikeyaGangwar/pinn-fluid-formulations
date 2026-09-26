@@ -1,12 +1,14 @@
 # Operator Conditioning and False Convergence in Physics-Informed Neural Networks for Incompressible Flows
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22979276.svg)](https://doi.org/10.5281/zenodo.22979276)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.0+](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Paper](https://img.shields.io/badge/Paper-Under_Review-orange.svg)](#citation)
+[![Preprint](https://img.shields.io/badge/Preprint-Zenodo%2022979276-blue.svg)](https://doi.org/10.5281/zenodo.22979276)
 
 Official PyTorch implementation and benchmark suite for the research paper:  
-**"Operator Conditioning and False Convergence in Physics-Informed Neural Networks for Incompressible Flows"**.
+**"Operator Conditioning and False Convergence in Physics-Informed Neural Networks for Incompressible Flows"**  
+Preprint available on Zenodo: [doi:10.5281/zenodo.22979276](https://doi.org/10.5281/zenodo.22979276).
 
 > **Note on Public Availability:** This repository is actively maintained and will be made fully open-source and publicly accessible under the MIT License upon formal peer-reviewed publication of the manuscript.
 
@@ -153,7 +155,8 @@ If you find this codebase or research useful, please cite our paper and the refe
   author={Singh, Kartikey},
   journal={Physics of Fluids},
   year={2026},
-  note={Under Review}
+  doi={10.5281/zenodo.22979276},
+  note={Preprint / Under Review}
 }
 
 
