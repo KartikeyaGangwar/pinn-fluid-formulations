@@ -52,7 +52,7 @@ This repository presents a controlled, formulation-level investigation of 2D ste
 ### 3. Integrated Global Flow Quantities
 | Model / Formulation | Kinetic Energy $E_k$ | Global Enstrophy $\mathcal{E}$ | Secondary Eddy Bias |
 | :--- | :---: | :---: | :--- |
-| **Reference FDM ($N=251$)** | 0.0231 | **5.38** | Numerical Reference ([Singh 2026](https://github.com/KartikeyaGangwar/lid-driven-cavity-cfd)) |
+| **Reference FDM ($N=251$)** | 0.0231 | **5.38** | Numerical Reference ([Gangwar 2026](https://github.com/KartikeyaGangwar/lid-driven-cavity-cfd)) |
 | **$\psi-p$ PINN (Proposed)** | 0.0231 | **4.18** | $+124.8\%$ (Over-predicted) |
 | **$\psi-\omega$ PINN (Coupled)** | 0.0236 | **4.54** | $-14.3\%$ (Under-predicted) |
 
@@ -150,9 +150,9 @@ python -c "from src.train_pinn import train; train(formulation='psi_p', Re=1000,
 If you find this codebase or research useful, please cite our paper and the reference CFD solver:
 
 ```bibtex
-@article{singh2026operator,
+@article{gangwar2026operator,
   title={Operator Conditioning and False Convergence in Physics-Informed Neural Networks for Incompressible Flows},
-  author={Singh, Kartikey},
+  author={Gangwar, Kartikeya},
   journal={Physics of Fluids},
   year={2026},
   doi={10.5281/zenodo.22979276},
@@ -160,8 +160,8 @@ If you find this codebase or research useful, please cite our paper and the refe
 }
 
 
-@misc{singh2026cavityfdm,
-  author       = {Singh, Kartikey},
+@misc{gangwar2026cavityfdm,
+  author       = {Gangwar, Kartikeya},
   title        = {A Reference Finite-Difference Solver for the {2D} Lid-Driven Cavity Flow},
   year         = {2026},
   howpublished = {\url{https://github.com/KartikeyaGangwar/lid-driven-cavity-cfd}},
